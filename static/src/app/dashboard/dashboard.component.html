@@ -1,0 +1,26 @@
+<mat-form-field class="filter-resources">
+  <input matInput type="text" placeholder="Search" [(ngModel)]="searchResource">
+  <button mat-button matSuffix mat-icon-button>
+      <mat-icon>search</mat-icon>
+  </button>
+</mat-form-field>
+<mat-accordion>
+  <mat-expansion-panel  *ngFor="let resource of resources | orderByStatus | reverse | filterResourceName: searchResource"
+                        (opened)="panelOpenState = true"
+                        (closed)="panelOpenState = false">
+    <mat-expansion-panel-header>
+     <mat-panel-title>
+        <mat-icon matListIcon [ngClass]="['resource-status', 'resource-status-' + getLastIncident(resource.incidents_history).status]">
+          {{ getIcon(getLastIncident(resource.incidents_history).status) }}
+        </mat-icon>
+        {{ resource.name }}
+      </mat-panel-title>
+      <mat-panel-description>
+        <p class="description">{{ getLastIncident(resource.incidents_history).description }}</p>
+      </mat-panel-description>
+    </mat-expansion-panel-header>
+    <p>History</p>
+    <mat-divider></mat-divider>
+    <app-resource-details [resource]="resource"></app-resource-details>
+  </mat-expansion-panel>
+</mat-accordion>
