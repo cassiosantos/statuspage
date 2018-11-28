@@ -23,23 +23,31 @@ func (s *IncidentService) GetIncidentsByComponentID(id string) ([]models.Inciden
 	return s.repo.GetIncidentsByComponentID(id)
 }
 
-func (s *IncidentService) GetAllIncidents(monthFilter string) ([]models.IncidentWithComponentID, error) {
-	if monthFilter == "" {
-		return s.repo.GetAllIncidents()
+func (s *IncidentService) GetIncidents(query string) ([]models.IncidentWithComponentID, error) {
+	var incidents []models.IncidentWithComponentID
+	if query == "" {
+		return s.GetAllIncidents()
 	}
-	month, err := validateMonth(monthFilter)
+	month, err := strconv.Atoi(query)
+	if err != nil {
+		return incidents, err
+	}
+	return s.GetIncidentsByMonth(month)
+}
+
+func (s *IncidentService) GetAllIncidents() ([]models.IncidentWithComponentID, error) {
+	return s.repo.GetAllIncidents()
+}
+
+func (s *IncidentService) GetIncidentsByMonth(monthFilter int) ([]models.IncidentWithComponentID, error) {
+	month, err := s.validateMonth(monthFilter)
 	if err != nil {
 		return []models.IncidentWithComponentID{}, err
 	}
 	return s.repo.GetIncidentsByMonth(month)
-
 }
 
-func validateMonth(monthArg string) (int, error) {
-	month, err := strconv.Atoi(monthArg)
-	if err != nil {
-		return -1, errors.E(errors.ErrInvalidMonth)
-	}
+func (s *IncidentService) validateMonth(month int) (int, error) {
 	valid := month > -1 && month < 12
 	if !valid {
 		return -1, errors.E(errors.ErrInvalidMonth)

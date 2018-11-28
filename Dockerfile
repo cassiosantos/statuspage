@@ -4,9 +4,15 @@ WORKDIR /go/src/github.com/involvestecnologia/statuspage
 
 RUN apk add git --no-cache
 
-COPY . .
+COPY Gopkg.lock .
 
-RUN go get .
+COPY Gopkg.toml .
+
+RUN go get -u github.com/golang/dep/cmd/dep
+
+RUN dep ensure --vendor-only
+
+COPY . .
 
 RUN GOOS=linux go build -o statuspage
 

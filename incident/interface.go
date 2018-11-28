@@ -24,7 +24,8 @@ type Repository interface {
 
 // Service describes the use case
 type Service interface {
-	validateMonth(monthArg string) (int, error)
+	GetIncidents(query string) ([]models.IncidentWithComponentID, error)
+	validateMonth(monthArg int) (int, error)
 	Read
 	Write
 }

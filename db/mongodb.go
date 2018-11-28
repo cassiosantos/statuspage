@@ -3,7 +3,7 @@ package db
 import (
 	"log"
 
-	mgo "gopkg.in/mgo.v2"
+	mgo "github.com/globalsign/mgo"
 )
 
 // InitMongo starts a mongo session

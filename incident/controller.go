@@ -10,10 +10,10 @@ import (
 )
 
 type IncidentController struct {
-	service *Service
+	service Service
 }
 
-func NewIncidentController(service *Service) *IncidentController {
+func NewIncidentController(service Service) *IncidentController {
 	return &IncidentController{service: service}
 }
 
@@ -55,8 +55,8 @@ func (ctrl *IncidentController) Find(c *gin.Context) {
 }
 
 func (ctrl *IncidentController) List(c *gin.Context) {
-	monthFilter := c.Query("month")
-	incidents, err := ctrl.service.GetAllIncidents(monthFilter)
+	query := c.Query("month")
+	incidents, err := ctrl.service.GetIncidents(query)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			c.JSON(http.StatusNotFound, "")

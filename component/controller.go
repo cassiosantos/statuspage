@@ -10,10 +10,10 @@ import (
 )
 
 type ComponentController struct {
-	service *Service
+	service Service
 }
 
-func NewComponentController(service *Service) *ComponentController {
+func NewComponentController(service Service) *ComponentController {
 	return &ComponentController{service: service}
 }
 

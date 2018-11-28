@@ -5,16 +5,16 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	mgo "github.com/globalsign/mgo"
 	"github.com/involvestecnologia/statuspage/errors"
 	"github.com/involvestecnologia/statuspage/models"
-	mgo "gopkg.in/mgo.v2"
 )
 
 type WebhookController struct {
-	service *Service
+	service Service
 }
 
-func NewWebhookController(service *Service) *WebhookController {
+func NewWebhookController(service Service) *WebhookController {
 	return &WebhookController{service: service}
 }
 

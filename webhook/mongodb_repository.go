@@ -4,9 +4,9 @@ import (
 	"log"
 
 	mgo "github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
 	"github.com/involvestecnologia/statuspage/errors"
 	"github.com/involvestecnologia/statuspage/models"
-	"gopkg.in/mgo.v2/bson"
 )
 
 type MongoRepository struct {

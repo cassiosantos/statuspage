@@ -10,10 +10,10 @@ import (
 )
 
 type ClientController struct {
-	service *Service
+	service Service
 }
 
-func NewClientController(service *Service) *ClientController {
+func NewClientController(service Service) *ClientController {
 	return &ClientController{service: service}
 }
 

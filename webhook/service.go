@@ -98,3 +98,11 @@ func (s *WebhookService) Delete(id string) error {
 func (s *WebhookService) FindWebhook(id string) (models.Webhook, error) {
 	return s.repo.FindWebhook(id)
 }
+
+func (s *WebhookService) ListWebhookByType(webhookType string) ([]models.Webhook, error) {
+	return s.repo.ListWebhookByType(webhookType)
+}
+
+func (s *WebhookService) FindWebhookByNameAndType(name string, webhookType string) (models.Webhook, error) {
+	return s.repo.FindWebhookByNameAndType(name, webhookType)
+}

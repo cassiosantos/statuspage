@@ -26,8 +26,11 @@ type Repository interface {
 
 // Service describes the use case
 type Service interface {
-	TriggerWebhook(element interface{}, action string)
-	WebhookExists(name string, webhookType string) bool
+	Create(webhook models.Webhook) error
+	Update(id string, webhook models.Webhook) error
+	Delete(id string) error
+	List(webhookType string) ([]models.Webhook, error)
+	TriggerWebhook(element interface{}, action string) error
+	WebhookExists(webhook models.Webhook) bool
 	Read
-	Write
 }
