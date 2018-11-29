@@ -23,9 +23,11 @@ func main() {
 
 	router.Use(middleware.CORSMiddleware())
 
-	component.ComponentRouter(component.NewMongoRepository(session), router)
-	incident.IncidentRouter(incident.NewMongoRepository(session), router)
-	client.ClientRouter(client.NewMongoRepository(session), router)
+	v1 := router.Group("/v1")
+
+	component.ComponentRouter(component.NewMongoRepository(session), v1)
+	incident.IncidentRouter(incident.NewMongoRepository(session), v1)
+	client.ClientRouter(client.NewMongoRepository(session), v1)
 
 	router.Run(":8080")
 }

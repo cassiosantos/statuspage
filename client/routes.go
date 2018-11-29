@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ClientRouter(clientRepo Repository, router *gin.Engine) {
+func ClientRouter(clientRepo Repository, router *gin.RouterGroup) {
 
 	clientService := NewService(clientRepo)
 	clientController := NewClientController(clientService)

@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func WebhookRouter(webhookRepo Repository, router *gin.Engine) {
+func WebhookRouter(webhookRepo Repository, router *gin.RouterGroup) {
 
 	webhookService := NewService(webhookRepo)
 	webhookController := NewWebhookController(webhookService)

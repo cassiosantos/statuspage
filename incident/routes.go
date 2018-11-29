@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func IncidentRouter(incidentRepo Repository, router *gin.Engine) {
+func IncidentRouter(incidentRepo Repository, router *gin.RouterGroup) {
 
 	incidentService := NewService(incidentRepo)
 	incidentController := NewIncidentController(incidentService)
