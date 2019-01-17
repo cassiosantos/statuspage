@@ -2,6 +2,7 @@ package errors
 
 const (
 	ErrInvalidRef              = "Invalid Ref, the reference %s is already in use"
+	ErrInvalidQuery            = "Invalid query"
 	ErrAlreadyExists           = "%s already exists"
 	ErrInvalidMonth            = "Invalid month"
 	ErrInvalidYear             = "Invalid year"

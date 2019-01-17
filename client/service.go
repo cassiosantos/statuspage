@@ -28,6 +28,9 @@ func (s *ClientService) UpdateClient(clientID string, client models.Client) erro
 }
 
 func (s *ClientService) FindClient(queryParam map[string]interface{}) (models.Client, error) {
+	if len(queryParam) == 0 {
+		return models.Client{}, errors.E(errors.ErrInvalidQuery)
+	}
 	return s.repo.Find(queryParam)
 }
 

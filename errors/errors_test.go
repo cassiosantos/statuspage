@@ -10,9 +10,12 @@ func TestDB_Error(t *testing.T) {
 
 	errConsts := []string{
 		ErrInvalidRef,
-		ErrInvalidIncidentJSONDate,
+		ErrInvalidQuery,
+		ErrAlreadyExists,
 		ErrInvalidMonth,
+		ErrInvalidYear,
 		ErrTriggerUnavailable,
+		ErrInvalidIncidentJSONDate,
 	}
 
 	for _, e := range errConsts {

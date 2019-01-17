@@ -65,6 +65,8 @@ func TestClientService_FindClient(t *testing.T) {
 	_, err = s.FindClient(map[string]interface{}{"name": "test"})
 	assert.NotNil(t, err)
 
+	_, err = s.FindClient(map[string]interface{}{})
+	assert.NotNil(t, err)
 }
 func TestClientService_ListClients(t *testing.T) {
 	s := NewService(newMockClientDAO())

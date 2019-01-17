@@ -37,6 +37,9 @@ func (s *ComponentService) UpdateComponent(ref string, component models.Componen
 }
 
 func (s *ComponentService) FindComponent(queryParam map[string]interface{}) (models.Component, error) {
+	if len(queryParam) == 0 {
+		return models.Component{}, errors.E(errors.ErrInvalidQuery)
+	}
 	return s.repo.Find(queryParam)
 }
 
