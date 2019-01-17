@@ -2,19 +2,15 @@ FROM golang:alpine3.7 as builder
 
 WORKDIR /go/src/github.com/involvestecnologia/statuspage
 
+ENV GO111MODULE=on
+
 RUN apk add git --no-cache
-
-COPY Gopkg.lock .
-
-COPY Gopkg.toml .
-
-RUN go get -u github.com/golang/dep/cmd/dep
-
-RUN dep ensure --vendor-only
 
 COPY . .
 
-RUN GOOS=linux go build -o statuspage
+RUN go mod vendor
+
+RUN CGO_ENABLED=0 GOOS=linux go build -o statuspage
 
 FROM alpine:3.7
 

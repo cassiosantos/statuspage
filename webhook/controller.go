@@ -44,7 +44,7 @@ func (ctrl *WebhookController) Find(c *gin.Context) {
 			c.JSON(http.StatusNotFound, "")
 			return
 		}
-		if err.Error() == errors.ErrInvalidHexID {
+		if err.Error() == errors.ErrAlreadyExists {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
@@ -83,7 +83,7 @@ func (ctrl *WebhookController) Update(c *gin.Context) {
 			c.JSON(http.StatusNotFound, "")
 			return
 		}
-		if err.Error() == errors.ErrInvalidHexID {
+		if err.Error() == errors.ErrAlreadyExists {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
@@ -103,7 +103,7 @@ func (ctrl *WebhookController) Delete(c *gin.Context) {
 			c.JSON(http.StatusNotFound, "")
 			return
 		}
-		if err.Error() == errors.ErrInvalidHexID {
+		if err.Error() == errors.ErrAlreadyExists {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}

@@ -24,12 +24,12 @@ func (ctrl *ComponentController) Create(c *gin.Context) {
 		return
 	}
 
-	if exists := ctrl.service.ComponentExists(newComponent.Name); exists {
-		c.JSON(http.StatusConflict, "Component "+newComponent.Name+" already exists")
-		return
-	}
-	err := ctrl.service.AddComponent(newComponent)
+	_, err := ctrl.service.CreateComponent(newComponent)
 	if err != nil {
+		if err.Error() == errors.ErrInvalidRef {
+			c.JSON(http.StatusConflict, "Component "+newComponent.Name+" already exists")
+			return
+		}
 		c.JSON(http.StatusInternalServerError, "")
 		return
 	}
@@ -43,17 +43,13 @@ func (ctrl *ComponentController) Update(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "Missing required parameter")
 		return
 	}
-	if exist := ctrl.service.ComponentExists(newComponent.Name); exist {
-		c.JSON(http.StatusPreconditionFailed, "A Component named "+newComponent.Name+" already exists")
-		return
-	}
 	err := ctrl.service.UpdateComponent(id, newComponent)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			c.JSON(http.StatusNotFound, "")
 			return
 		}
-		if err.Error() == errors.ErrInvalidHexID {
+		if err.Error() == errors.ErrInvalidRef {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
@@ -64,15 +60,15 @@ func (ctrl *ComponentController) Update(c *gin.Context) {
 }
 
 func (ctrl *ComponentController) Find(c *gin.Context) {
-	queryBy := c.DefaultQuery("search", "id")
+	queryBy := c.DefaultQuery("search", "ref")
 	id := c.Param("id")
-	component, err := ctrl.service.GetComponent(queryBy, id)
+	component, err := ctrl.service.FindComponent(map[string]interface{}{queryBy: id})
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			c.JSON(http.StatusNotFound, "")
 			return
 		}
-		if err.Error() == errors.ErrInvalidHexID {
+		if err.Error() == errors.ErrInvalidRef {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
@@ -82,22 +78,8 @@ func (ctrl *ComponentController) Find(c *gin.Context) {
 	c.JSON(http.StatusOK, component)
 }
 
-func (ctrl *ComponentController) FindByGroup(c *gin.Context) {
-	group := c.Param("group")
-	components, err := ctrl.service.GetComponentsByGroup(group)
-	if err != nil {
-		if err == mgo.ErrNotFound {
-			c.JSON(http.StatusNotFound, "")
-			return
-		}
-		c.JSON(http.StatusInternalServerError, "")
-		return
-	}
-	c.JSON(http.StatusOK, components)
-}
-
 func (ctrl *ComponentController) List(c *gin.Context) {
-	components, err := ctrl.service.GetAllComponents()
+	components, err := ctrl.service.ListComponents()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, "")
 		return
@@ -107,13 +89,13 @@ func (ctrl *ComponentController) List(c *gin.Context) {
 
 func (ctrl *ComponentController) Delete(c *gin.Context) {
 	id := c.Param("id")
-	err := ctrl.service.DeleteComponent(id)
+	err := ctrl.service.RemoveComponent(id)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			c.JSON(http.StatusNotFound, "")
 			return
 		}
-		if err.Error() == errors.ErrInvalidHexID {
+		if err.Error() == errors.ErrInvalidRef {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}

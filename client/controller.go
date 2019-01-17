@@ -23,7 +23,7 @@ func (ctrl *ClientController) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "missing required parameter")
 		return
 	}
-	err := ctrl.service.AddClient(newClient)
+	_, err := ctrl.service.CreateClient(newClient)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, "")
 	}
@@ -43,7 +43,7 @@ func (ctrl *ClientController) Update(c *gin.Context) {
 			c.JSON(http.StatusNotFound, "")
 			return
 		}
-		if err.Error() == errors.ErrInvalidHexID {
+		if err.Error() == errors.ErrInvalidRef {
 			c.JSON(http.StatusBadRequest, "")
 			return
 		}
@@ -53,15 +53,15 @@ func (ctrl *ClientController) Update(c *gin.Context) {
 }
 
 func (ctrl *ClientController) Find(c *gin.Context) {
-	queryBy := c.DefaultQuery("search", "id")
-	clientID := c.Param("clientId")
-	client, err := ctrl.service.FindClient(queryBy, clientID)
+	queryBy := c.DefaultQuery("search", "ref")
+	qValue := c.Param("clientId")
+	client, err := ctrl.service.FindClient(map[string]interface{}{queryBy: qValue})
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			c.JSON(http.StatusNotFound, "")
 			return
 		}
-		if err.Error() == errors.ErrInvalidHexID {
+		if err.Error() == errors.ErrInvalidRef {
 			c.JSON(http.StatusBadRequest, "")
 			return
 		}
@@ -72,13 +72,13 @@ func (ctrl *ClientController) Find(c *gin.Context) {
 
 func (ctrl *ClientController) Delete(c *gin.Context) {
 	clientID := c.Param("clientId")
-	err := ctrl.service.DeleteClient(clientID)
+	err := ctrl.service.RemoveClient(clientID)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			c.JSON(http.StatusNotFound, "")
 			return
 		}
-		if err.Error() == errors.ErrInvalidHexID {
+		if err.Error() == errors.ErrInvalidRef {
 			c.JSON(http.StatusBadRequest, "")
 			return
 		}

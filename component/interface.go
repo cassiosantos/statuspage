@@ -6,17 +6,15 @@ import (
 
 // Read implements the read action methods
 type Read interface {
-	GetAllComponents() ([]models.Component, error)
-	GetComponentsByGroup(groupName string) ([]models.Component, error)
-	GetComponentById(id string) (models.Component, error)
-	GetComponentByName(name string) (models.Component, error)
+	Find(queryParam map[string]interface{}) (models.Component, error)
+	List() ([]models.Component, error)
 }
 
 // Write implements the write action methods
 type Write interface {
-	AddComponent(component models.Component) error
-	UpdateComponent(id string, component models.Component) error
-	DeleteComponent(id string) error
+	Delete(componentRef string) error
+	Insert(component models.Component) (string, error)
+	Update(componentRef string, component models.Component) error
 }
 
 // Repository describes the repository where the data will be writen and read from
@@ -27,8 +25,10 @@ type Repository interface {
 
 // Service describes the use case
 type Service interface {
-	GetComponent(queryBy string, id string) (models.Component, error)
-	ComponentExists(name string) bool
-	Read
-	Write
+	componentExists(name string) (models.Component, bool)
+	CreateComponent(component models.Component) (string, error)
+	FindComponent(queryParam map[string]interface{}) (models.Component, error)
+	ListComponents() ([]models.Component, error)
+	RemoveComponent(componentRef string) error
+	UpdateComponent(componentRef string, component models.Component) error
 }

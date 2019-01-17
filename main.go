@@ -13,8 +13,8 @@ import (
 )
 
 func main() {
-	mgouri := os.Getenv("MONGO_URI")
-	if mgouri == "" {
+	mgouri, exist := os.LookupEnv("MONGO_URI")
+	if !exist {
 		log.Panic("MongoDB URI not informed")
 	}
 	session := db.InitMongo(mgouri)

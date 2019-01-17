@@ -11,8 +11,8 @@ type Incident struct {
 	Date        time.Time `json:"occurrence_date"`
 }
 
-// IncidentWithComponentID is a structure of an Incident with it's Component id
-type IncidentWithComponentID struct {
+// IncidentWithComponentName is a structure of an Incident with it's Component Name
+type IncidentWithComponentName struct {
 	Component string   `json:"component"`
 	Incident  Incident `json:"incident"`
 }

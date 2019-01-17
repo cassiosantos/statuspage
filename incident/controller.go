@@ -24,9 +24,9 @@ func (ctrl *IncidentController) Create(c *gin.Context) {
 		return
 	}
 	componentID := c.Param("componentId")
-	err := ctrl.service.AddIncidentToComponent(componentID, newIncident)
+	err := ctrl.service.CreateIncidents(componentID, newIncident)
 	if err != nil {
-		if err.Error() == errors.ErrInvalidHexID {
+		if err.Error() == errors.ErrInvalidRef {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
@@ -38,13 +38,13 @@ func (ctrl *IncidentController) Create(c *gin.Context) {
 
 func (ctrl *IncidentController) Find(c *gin.Context) {
 	componentID := c.Param("componentId")
-	incidents, err := ctrl.service.GetIncidentsByComponentID(componentID)
+	incidents, err := ctrl.service.FindIncidents(componentID)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			c.JSON(http.StatusNotFound, "")
 			return
 		}
-		if err.Error() == errors.ErrInvalidHexID {
+		if err.Error() == errors.ErrInvalidRef {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
@@ -55,8 +55,10 @@ func (ctrl *IncidentController) Find(c *gin.Context) {
 }
 
 func (ctrl *IncidentController) List(c *gin.Context) {
-	query := c.Query("month")
-	incidents, err := ctrl.service.GetIncidents(query)
+	mQ := c.Query("month")
+	yQ := c.Query("year")
+
+	incidents, err := ctrl.service.ListIncidents(yQ, mQ)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			c.JSON(http.StatusNotFound, "")

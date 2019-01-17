@@ -1,6 +1,11 @@
 package client
 
-import "github.com/involvestecnologia/statuspage/models"
+import (
+	"fmt"
+
+	"github.com/involvestecnologia/statuspage/errors"
+	"github.com/involvestecnologia/statuspage/models"
+)
 
 type ClientService struct {
 	repo Repository
@@ -10,33 +15,31 @@ func NewService(r Repository) *ClientService {
 	return &ClientService{repo: r}
 }
 
-func (s *ClientService) AddClient(client models.Client) error {
-	return s.repo.AddClient(client)
+func (s *ClientService) CreateClient(client models.Client) (string, error) {
+	if client.Ref != "" && s.clientRefAlreadyExists(client.Ref) {
+		return client.Ref, errors.E(fmt.Sprintf(errors.ErrInvalidRef, client.Ref))
+	}
+
+	return s.repo.Insert(client)
 }
 
 func (s *ClientService) UpdateClient(clientID string, client models.Client) error {
-	return s.repo.UpdateClient(clientID, client)
+	return s.repo.Update(clientID, client)
 }
 
-func (s *ClientService) FindClient(queryBy string, clientID string) (models.Client, error) {
-	if queryBy == "name" {
-		return s.FindById(clientID)
-	}
-	return s.repo.FindByName(clientID)
+func (s *ClientService) FindClient(queryParam map[string]interface{}) (models.Client, error) {
+	return s.repo.Find(queryParam)
 }
 
-func (s *ClientService) FindById(clientID string) (models.Client, error) {
-	return s.repo.FindById(clientID)
-}
-
-func (s *ClientService) FindByName(clientID string) (models.Client, error) {
-	return s.repo.FindByName(clientID)
-}
-
-func (s *ClientService) DeleteClient(clientID string) error {
-	return s.repo.DeleteClient(clientID)
+func (s *ClientService) RemoveClient(clientID string) error {
+	return s.repo.Delete(clientID)
 }
 
 func (s *ClientService) ListClients() ([]models.Client, error) {
-	return s.repo.ListClients()
+	return s.repo.List()
+}
+
+func (s *ClientService) clientRefAlreadyExists(clientRef string) bool {
+	_, err := s.FindClient(map[string]interface{}{"ref": clientRef})
+	return err == nil
 }

@@ -4,16 +4,15 @@ import "github.com/involvestecnologia/statuspage/models"
 
 // Read implements the read action methods
 type Read interface {
-	FindById(clientID string) (models.Client, error)
-	FindByName(clientID string) (models.Client, error)
-	ListClients() ([]models.Client, error)
+	Find(queryParam map[string]interface{}) (models.Client, error)
+	List() ([]models.Client, error)
 }
 
 // Write implements the write action methods
 type Write interface {
-	AddClient(client models.Client) error
-	UpdateClient(clientID string, client models.Client) error
-	DeleteClient(clientID string) error
+	Delete(clientRef string) error
+	Insert(client models.Client) (string, error)
+	Update(clientRef string, client models.Client) error
 }
 
 // Repository describes the repository where the data will be writen and read from
@@ -24,7 +23,9 @@ type Repository interface {
 
 // Service describes the use case
 type Service interface {
-	Read
-	Write
-	FindClient(queryBy string, clientID string) (models.Client, error)
+	CreateClient(client models.Client) (string, error)
+	FindClient(queryParam map[string]interface{}) (models.Client, error)
+	ListClients() ([]models.Client, error)
+	RemoveClient(clientRef string) error
+	UpdateClient(clientRef string, client models.Client) error
 }
