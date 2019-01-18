@@ -21,8 +21,8 @@ func (s *ComponentService) componentExists(componentFields map[string]interface{
 }
 
 func (s *ComponentService) CreateComponent(component models.Component) (string, error) {
-	if 	_, exist := s.componentExists(map[string]interface{}{"name": component.Name}); exist {
-		return component.Ref, errors.E(fmt.Sprintf(errors.ErrAlreadyExists, component.Name))
+	if _, exist := s.componentExists(map[string]interface{}{"name": component.Name}); exist {
+		return component.Name, errors.E(fmt.Sprintf(errors.ErrAlreadyExists, component.Name))
 	}
 	if component.Ref != "" {
 		if _, exist := s.componentExists(map[string]interface{}{"ref": component.Ref}); exist {

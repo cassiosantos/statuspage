@@ -5,6 +5,7 @@ import (
 
 	mgo "github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
+	"github.com/involvestecnologia/statuspage/errors"
 	"github.com/involvestecnologia/statuspage/models"
 )
 
@@ -44,6 +45,9 @@ func (r *MongoRepository) Find(q map[string]interface{}) (models.Component, erro
 	if err != nil && err != mgo.ErrNotFound {
 		log.Panicf("Error searching component: %s\n", err)
 	}
+	if err == mgo.ErrNotFound {
+		return c, errors.E(errors.ErrNotFound)
+	}
 	return c, err
 }
 
@@ -57,6 +61,9 @@ func (r *MongoRepository) Update(ref string, comp models.Component) error {
 	if err != nil && err != mgo.ErrNotFound {
 		log.Panicf("Error updating component: %s\n", err)
 	}
+	if err == mgo.ErrNotFound {
+		return errors.E(errors.ErrNotFound)
+	}
 	return err
 }
 
@@ -65,6 +72,9 @@ func (r *MongoRepository) Delete(ref string) error {
 	err := r.db.DB(databaseName).C("Component").Remove(compQ)
 	if err != nil && err != mgo.ErrNotFound {
 		log.Panicf("Error deleting component: %s\n", err)
+	}
+	if err == mgo.ErrNotFound {
+		return errors.E(errors.ErrNotFound)
 	}
 	return err
 }

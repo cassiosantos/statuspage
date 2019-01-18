@@ -16,15 +16,20 @@ func NewService(r Repository) *ClientService {
 }
 
 func (s *ClientService) CreateClient(client models.Client) (string, error) {
-	if client.Ref != "" && s.clientRefAlreadyExists(client.Ref) {
-		return client.Ref, errors.E(fmt.Sprintf(errors.ErrInvalidRef, client.Ref))
+	if s.clientAlreadyExists(map[string]interface{}{"name": client.Name}) {
+		return client.Name, errors.E(fmt.Sprintf(errors.ErrAlreadyExists, client.Name))
+	}
+	if client.Ref != "" {
+		if s.clientAlreadyExists(map[string]interface{}{"ref": client.Ref}) {
+			return client.Ref, errors.E(fmt.Sprintf(errors.ErrAlreadyExists, client.Ref))
+		}
 	}
 
 	return s.repo.Insert(client)
 }
 
-func (s *ClientService) UpdateClient(clientID string, client models.Client) error {
-	return s.repo.Update(clientID, client)
+func (s *ClientService) UpdateClient(clientRef string, client models.Client) error {
+	return s.repo.Update(clientRef, client)
 }
 
 func (s *ClientService) FindClient(queryParam map[string]interface{}) (models.Client, error) {
@@ -42,7 +47,7 @@ func (s *ClientService) ListClients() ([]models.Client, error) {
 	return s.repo.List()
 }
 
-func (s *ClientService) clientRefAlreadyExists(clientRef string) bool {
-	_, err := s.FindClient(map[string]interface{}{"ref": clientRef})
+func (s *ClientService) clientAlreadyExists(clientFields map[string]interface{}) bool {
+	_, err := s.FindClient(clientFields)
 	return err == nil
 }

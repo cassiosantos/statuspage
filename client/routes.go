@@ -12,9 +12,9 @@ func ClientRouter(clientRepo Repository, router *gin.RouterGroup) {
 	clientRouter := router.Group("/client")
 	{
 		clientRouter.POST("", clientController.Create)
-		clientRouter.PATCH("/:clientId", clientController.Update)
-		clientRouter.GET("/:clientId", clientController.Find)
-		clientRouter.DELETE("/:clientId", clientController.Delete)
+		clientRouter.PATCH("/:clientRef", clientController.Update)
+		clientRouter.GET("/:clientRef", clientController.Find)
+		clientRouter.DELETE("/:clientRef", clientController.Delete)
 	}
 
 	clientsRouter := router.Group("/clients")

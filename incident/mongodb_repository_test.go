@@ -54,12 +54,12 @@ func TestIncidentMongoDB_Repository_Insert(t *testing.T) {
 
 	repo := NewMongoRepository(testSession)
 
-	err := repo.Insert(c.Ref, i)
+	err := repo.Insert(c.Name, i)
 	assert.Nil(t, err)
 
 	c.Incidents = append(c.Incidents, i)
 
-	incidents, err := repo.Find(c.Ref)
+	incidents, err := repo.Find(c.Name)
 	if assert.Nil(t, err) && assert.NotNil(t, incidents) {
 		assert.Equal(t, c.Incidents, incidents)
 	}
@@ -71,12 +71,12 @@ func TestIncidentMongoDB_Repository_Insert(t *testing.T) {
 func TestIncidentMongoDB_Repository_Find(t *testing.T) {
 	repo := NewMongoRepository(testSession)
 
-	incidents, err := repo.Find(c.Ref)
+	incidents, err := repo.Find(c.Name)
 	if assert.Nil(t, err) && assert.NotNil(t, incidents) {
 		assert.Equal(t, c.Incidents, incidents)
 	}
 
-	_, err = repo.Find("Invalid Ref")
+	_, err = repo.Find("Invalid Name")
 	assert.NotNil(t, err)
 }
 

@@ -1,7 +1,6 @@
 package client
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/globalsign/mgo/bson"
@@ -11,8 +10,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const zeroTimeHex = "886e09000000000000000000"
-const oneSecTimeHex = "886e09010000000000000000"
+const (
+	zeroTimeHex   = "886e09000000000000000000"
+	oneSecTimeHex = "886e09010000000000000000"
+)
 
 func TestNewClientService(t *testing.T) {
 	dao := newMockClientDAO()
@@ -140,7 +141,7 @@ func (m *mockClientDAO) Delete(clientRef string) error {
 			return nil
 		}
 	}
-	return errors.E(fmt.Sprintf("Client with id %s was not found", clientRef))
+	return errors.E(errors.ErrNotFound)
 }
 
 func (m *mockClientDAO) Find(q map[string]interface{}) (models.Client, error) {
@@ -162,7 +163,7 @@ func (m *mockClientDAO) Find(q map[string]interface{}) (models.Client, error) {
 		}
 	}
 
-	return models.Client{}, errors.E("Client not found")
+	return models.Client{}, errors.E(errors.ErrNotFound)
 }
 
 func (m *mockClientDAO) Insert(client models.Client) (string, error) {
@@ -180,9 +181,10 @@ func (m *mockClientDAO) List() ([]models.Client, error) {
 func (m *mockClientDAO) Update(clientRef string, client models.Client) error {
 	for i, c := range m.clients {
 		if c.Ref == clientRef {
-			m.clients[i] = client
+			m.clients[i].Name = client.Name
+			m.clients[i].Resources = client.Resources
 			return nil
 		}
 	}
-	return errors.E(fmt.Sprintf("Client with id %s was not found", clientRef))
+	return errors.E(errors.ErrNotFound)
 }

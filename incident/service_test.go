@@ -12,8 +12,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const zeroTimeHex = "886e09000000000000000000"
-const oneSecTimeHex = "886e09010000000000000000"
+const (
+	zeroTimeHex   = "886e09000000000000000000"
+	oneSecTimeHex = "886e09010000000000000000"
+)
 
 func TestNewIncidentService(t *testing.T) {
 	dao := newMockIncidentDAO()
@@ -78,10 +80,10 @@ func TestIncidentService_CreateIncident(t *testing.T) {
 		Date:        time.Time{},
 	}
 
-	err := s.CreateIncidents(zeroTimeHex, i)
+	err := s.CreateIncidents("first", i)
 	assert.Nil(t, err)
 
-	inc, err := s.FindIncidents(zeroTimeHex)
+	inc, err := s.FindIncidents("first")
 	if assert.Nil(t, err) && assert.NotNil(t, i) {
 		fmt.Printf("%v", inc)
 		assert.Equal(t, i, inc[len(inc)-1])
@@ -93,7 +95,7 @@ func TestIncidentService_CreateIncident(t *testing.T) {
 func TestIncidentService_FindIncidents(t *testing.T) {
 	s := NewService(newMockIncidentDAO())
 
-	i, err := s.FindIncidents(zeroTimeHex)
+	i, err := s.FindIncidents("first")
 	if assert.Nil(t, err) && assert.NotNil(t, i) {
 		if assert.IsType(t, []models.Incident{}, i) {
 			assert.Equal(t, i[0].Status, models.IncidentStatusOK)
@@ -165,37 +167,36 @@ func newMockIncidentDAO() Repository {
 	}
 }
 
-func (m *mockIncidentDAO) Find(ref string) ([]models.Incident, error) {
+func (m *mockIncidentDAO) Find(name string) ([]models.Incident, error) {
 	var i []models.Incident
 
 	for _, c := range m.components {
-		if c.Ref == ref {
+		if c.Name == name {
 			return c.Incidents, nil
 		}
 	}
-	return i, errors.E(fmt.Sprintf("Component with ref %s not found", ref))
+	return i, errors.E(errors.ErrNotFound)
 }
 func (m *mockIncidentDAO) List(start time.Time, end time.Time) ([]models.IncidentWithComponentName, error) {
 	var inc []models.IncidentWithComponentName
 	for _, c := range m.components {
 		for _, i := range c.Incidents {
-			inc = append(inc, models.IncidentWithComponentName{
-				Component: c.Ref,
-				Incident:  i,
-			})
+			if (i.Date.Before(end) && i.Date.Before(end)) || (start.IsZero() && end.IsZero()) {
+				inc = append(inc, models.IncidentWithComponentName{
+					Component: c.Ref,
+					Incident:  i,
+				})
+			}
 		}
 	}
 	return inc, nil
 }
-func (m *mockIncidentDAO) Insert(componentRef string, incident models.Incident) error {
-	if !bson.IsObjectIdHex(componentRef) {
-		return errors.E(fmt.Sprintf("%s is a invalid Ref", componentRef))
-	}
+func (m *mockIncidentDAO) Insert(componentName string, incident models.Incident) error {
 	for index, c := range m.components {
-		if c.Ref == componentRef {
+		if c.Name == componentName {
 			m.components[index].Incidents = append(c.Incidents, incident)
 			return nil
 		}
 	}
-	return errors.E(fmt.Sprintf("Component with id %s not found", componentRef))
+	return errors.E(errors.ErrNotFound)
 }

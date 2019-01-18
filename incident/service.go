@@ -16,12 +16,12 @@ func NewService(r Repository) *IncidentService {
 	return &IncidentService{repo: r}
 }
 
-func (s *IncidentService) CreateIncidents(componentID string, incident models.Incident) error {
-	return s.repo.Insert(componentID, incident)
+func (s *IncidentService) CreateIncidents(componentName string, incident models.Incident) error {
+	return s.repo.Insert(componentName, incident)
 }
 
-func (s *IncidentService) FindIncidents(componentID string) ([]models.Incident, error) {
-	return s.repo.Find(componentID)
+func (s *IncidentService) FindIncidents(componentName string) ([]models.Incident, error) {
+	return s.repo.Find(componentName)
 }
 
 func (s *IncidentService) ListIncidents(year string, month string) ([]models.IncidentWithComponentName, error) {
@@ -74,7 +74,7 @@ func (s *IncidentService) validateYear(year string) (int, error) {
 	if err != nil {
 		return -1, err
 	}
-	valid := y > 0 && y < time.Now().Year()
+	valid := y > 0 && y <= time.Now().Year()
 	if !valid {
 		return -1, errors.E(errors.ErrInvalidYear)
 	}

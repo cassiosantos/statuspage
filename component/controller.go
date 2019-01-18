@@ -1,10 +1,10 @@
 package component
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	mgo "github.com/globalsign/mgo"
 	"github.com/involvestecnologia/statuspage/errors"
 	"github.com/involvestecnologia/statuspage/models"
 )
@@ -24,10 +24,10 @@ func (ctrl *ComponentController) Create(c *gin.Context) {
 		return
 	}
 
-	_, err := ctrl.service.CreateComponent(newComponent)
+	ref, err := ctrl.service.CreateComponent(newComponent)
 	if err != nil {
-		if err.Error() == errors.ErrInvalidRef {
-			c.JSON(http.StatusConflict, "Component "+newComponent.Name+" already exists")
+		if err.Error() == fmt.Sprintf(errors.ErrAlreadyExists, ref) {
+			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
 		c.JSON(http.StatusInternalServerError, "")
@@ -45,12 +45,8 @@ func (ctrl *ComponentController) Update(c *gin.Context) {
 	}
 	err := ctrl.service.UpdateComponent(id, newComponent)
 	if err != nil {
-		if err == mgo.ErrNotFound {
+		if err.Error() == errors.ErrNotFound {
 			c.JSON(http.StatusNotFound, "")
-			return
-		}
-		if err.Error() == errors.ErrInvalidRef {
-			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
 		c.JSON(http.StatusInternalServerError, "")
@@ -64,12 +60,8 @@ func (ctrl *ComponentController) Find(c *gin.Context) {
 	id := c.Param("id")
 	component, err := ctrl.service.FindComponent(map[string]interface{}{queryBy: id})
 	if err != nil {
-		if err == mgo.ErrNotFound {
+		if err.Error() == errors.ErrNotFound {
 			c.JSON(http.StatusNotFound, "")
-			return
-		}
-		if err.Error() == errors.ErrInvalidRef {
-			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
 		c.JSON(http.StatusInternalServerError, "")
@@ -91,16 +83,12 @@ func (ctrl *ComponentController) Delete(c *gin.Context) {
 	id := c.Param("id")
 	err := ctrl.service.RemoveComponent(id)
 	if err != nil {
-		if err == mgo.ErrNotFound {
+		if err.Error() == errors.ErrNotFound {
 			c.JSON(http.StatusNotFound, "")
-			return
-		}
-		if err.Error() == errors.ErrInvalidRef {
-			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
 		c.JSON(http.StatusInternalServerError, "")
 		return
 	}
-	c.JSON(http.StatusOK, "")
+	c.JSON(http.StatusNoContent, "")
 }

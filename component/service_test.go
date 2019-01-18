@@ -1,8 +1,8 @@
 package component
 
 import (
-	"fmt"
 	"testing"
+	"time"
 
 	"github.com/globalsign/mgo/bson"
 	"github.com/involvestecnologia/statuspage/errors"
@@ -12,8 +12,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const zeroTimeHex = "886e09000000000000000000"
-const oneSecTimeHex = "886e09010000000000000000"
+const (
+	zeroTimeHex   = "886e09000000000000000000"
+	oneSecTimeHex = "886e09010000000000000000"
+)
 
 func TestNewComponentService(t *testing.T) {
 	dao := newMockComponentDAO()
@@ -73,7 +75,7 @@ func TestComponentService_CreateComponent(t *testing.T) {
 	s := NewService(newMockComponentDAO())
 
 	c := models.Component{
-		Ref:       bson.NewObjectIdWithTime(bson.Now()).Hex(),
+		Ref:       bson.NewObjectIdWithTime(bson.Now().Add(5 * time.Second)).Hex(),
 		Name:      "New Component",
 		Address:   "no-address",
 		Incidents: make([]models.Incident, 0),
@@ -133,10 +135,10 @@ func TestComponentService_componentExists(t *testing.T) {
 			assert.Equal(t, "first", c.Name)
 		}
 	}
-	_, exists := s.componentExists(c.Name)
+	_, exists := s.componentExists(map[string]interface{}{"name": c.Name})
 	assert.True(t, exists)
 
-	_, exists = s.componentExists(bson.NewObjectIdWithTime(bson.Now()).String())
+	_, exists = s.componentExists(map[string]interface{}{"name": bson.NewObjectIdWithTime(bson.Now()).String()})
 	assert.False(t, exists)
 }
 
@@ -200,11 +202,11 @@ func (m *mockComponentDAO) Find(q map[string]interface{}) (models.Component, err
 				}
 			}
 		} else {
-			return c, errors.E("No query parameters passed")
+			return c, errors.E(errors.ErrInvalidQuery)
 		}
 	}
 
-	return c, errors.E("Component not found")
+	return c, errors.E(errors.ErrNotFound)
 }
 func (m *mockComponentDAO) Insert(component models.Component) (string, error) {
 	if component.Ref == "" {
@@ -216,11 +218,13 @@ func (m *mockComponentDAO) Insert(component models.Component) (string, error) {
 func (m *mockComponentDAO) Update(ref string, component models.Component) error {
 	for k, comp := range m.components {
 		if comp.Ref == ref {
-			m.components[k] = component
+			m.components[k].Name = component.Name
+			m.components[k].Address = component.Address
+			m.components[k].Incidents = component.Incidents
 			return nil
 		}
 	}
-	return errors.E(fmt.Sprintf("Component with ref %s not found", ref))
+	return errors.E(errors.ErrNotFound)
 }
 func (m *mockComponentDAO) Delete(ref string) error {
 	for k, comp := range m.components {
@@ -229,5 +233,5 @@ func (m *mockComponentDAO) Delete(ref string) error {
 			return nil
 		}
 	}
-	return errors.E(fmt.Sprintf("Component with ref %s not found", ref))
+	return errors.E(errors.ErrNotFound)
 }

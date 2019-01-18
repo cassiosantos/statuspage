@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	mgo "github.com/globalsign/mgo"
 	"github.com/involvestecnologia/statuspage/errors"
 	"github.com/involvestecnologia/statuspage/models"
 )
@@ -23,11 +22,11 @@ func (ctrl *IncidentController) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "missing required parameter "+err.Error())
 		return
 	}
-	componentID := c.Param("componentId")
+	componentID := c.Param("componentName")
 	err := ctrl.service.CreateIncidents(componentID, newIncident)
 	if err != nil {
-		if err.Error() == errors.ErrInvalidRef {
-			c.JSON(http.StatusBadRequest, err.Error())
+		if err.Error() == errors.ErrNotFound {
+			c.JSON(http.StatusNotFound, err.Error())
 			return
 		}
 		c.JSON(http.StatusInternalServerError, "")
@@ -37,15 +36,11 @@ func (ctrl *IncidentController) Create(c *gin.Context) {
 }
 
 func (ctrl *IncidentController) Find(c *gin.Context) {
-	componentID := c.Param("componentId")
+	componentID := c.Param("componentName")
 	incidents, err := ctrl.service.FindIncidents(componentID)
 	if err != nil {
-		if err == mgo.ErrNotFound {
+		if err.Error() == errors.ErrNotFound {
 			c.JSON(http.StatusNotFound, "")
-			return
-		}
-		if err.Error() == errors.ErrInvalidRef {
-			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
 		c.JSON(http.StatusInternalServerError, "")
@@ -60,12 +55,8 @@ func (ctrl *IncidentController) List(c *gin.Context) {
 
 	incidents, err := ctrl.service.ListIncidents(yQ, mQ)
 	if err != nil {
-		if err == mgo.ErrNotFound {
-			c.JSON(http.StatusNotFound, "")
-			return
-		}
-		if err.Error() == errors.ErrInvalidMonth {
-			c.JSON(http.StatusBadRequest, err.Error())
+		if err.Error() == errors.ErrInvalidYear || err.Error() == errors.ErrInvalidMonth {
+			c.JSON(http.StatusBadRequest, "")
 			return
 		}
 		c.JSON(http.StatusInternalServerError, "")

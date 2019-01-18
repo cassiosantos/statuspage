@@ -5,6 +5,7 @@ import (
 
 	mgo "github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
+	"github.com/involvestecnologia/statuspage/errors"
 	"github.com/involvestecnologia/statuspage/models"
 )
 
@@ -39,6 +40,9 @@ func (r *MongoRepository) Update(clientID string, client models.Client) error {
 	if err != nil && err != mgo.ErrNotFound {
 		log.Panicf("Error updating client: %s\n", err)
 	}
+	if err == mgo.ErrNotFound {
+		return errors.E(errors.ErrNotFound)
+	}
 	return err
 }
 
@@ -48,6 +52,9 @@ func (r *MongoRepository) Find(q map[string]interface{}) (models.Client, error) 
 	if err != nil && err != mgo.ErrNotFound {
 		log.Panicf("Error searching client: %s\n", err)
 	}
+	if err == mgo.ErrNotFound {
+		return client, errors.E(errors.ErrNotFound)
+	}
 	return client, err
 }
 
@@ -56,6 +63,9 @@ func (r *MongoRepository) Delete(clientID string) error {
 	err := r.db.DB(databaseName).C("Client").Remove(clientQ)
 	if err != nil && err != mgo.ErrNotFound {
 		log.Panicf("Error deleting client: %s\n", err)
+	}
+	if err == mgo.ErrNotFound {
+		return errors.E(errors.ErrNotFound)
 	}
 	return err
 }

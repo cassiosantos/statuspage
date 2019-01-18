@@ -8,13 +8,13 @@ import (
 
 // Read implements the read action methods
 type Read interface {
-	Find(componentRef string) ([]models.Incident, error)
+	Find(componentName string) ([]models.Incident, error)
 	List(startDt time.Time, endDt time.Time) ([]models.IncidentWithComponentName, error)
 }
 
 // Write implements the write action methods
 type Write interface {
-	Insert(componentRef string, incident models.Incident) error
+	Insert(componentName string, incident models.Incident) error
 }
 
 // Repository describes the repository where the data will be writen and read from
@@ -25,8 +25,8 @@ type Repository interface {
 
 // Service describes the use case
 type Service interface {
-	CreateIncidents(componentRef string, incident models.Incident) error
-	FindIncidents(componentRef string) ([]models.Incident, error)
+	CreateIncidents(componentName string, incident models.Incident) error
+	FindIncidents(componentName string) ([]models.Incident, error)
 	ListIncidents(year string, month string) ([]models.IncidentWithComponentName, error)
 	validateMonth(monthArg string) (int, error)
 }

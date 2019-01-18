@@ -6,6 +6,7 @@ import (
 
 	mgo "github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
+	"github.com/involvestecnologia/statuspage/errors"
 	"github.com/involvestecnologia/statuspage/models"
 )
 
@@ -19,20 +20,23 @@ func NewMongoRepository(session *mgo.Session) *MongoRepository {
 	return &MongoRepository{db: session}
 }
 
-func (r *MongoRepository) Insert(componentRef string, incident models.Incident) error {
-	findCompQ := bson.M{"ref": componentRef}
+func (r *MongoRepository) Insert(componentName string, incident models.Incident) error {
+	findCompQ := bson.M{"name": componentName}
 	insertIncidentQ := bson.M{"$push": bson.M{"incidents": incident}}
 	err := r.db.DB(databaseName).C("Component").Update(findCompQ, insertIncidentQ)
 	if err != nil && err != mgo.ErrNotFound {
 		log.Panicf("Error updating component: %s\n", err)
 	}
+	if err == mgo.ErrNotFound {
+		return errors.E(errors.ErrNotFound)
+	}
 	return err
 }
 
-func (r *MongoRepository) Find(componentRef string) ([]models.Incident, error) {
+func (r *MongoRepository) Find(componentName string) ([]models.Incident, error) {
 	var component models.Component
 
-	findCompQ := bson.M{"ref": componentRef}
+	findCompQ := bson.M{"name": componentName}
 	incidentQ := bson.M{"incidents": bson.M{"$not": bson.M{"$size": 0}}}
 	query := bson.M{"$and": []bson.M{findCompQ, incidentQ}}
 	incidentFilter := bson.M{"incidents": 1}
@@ -40,6 +44,9 @@ func (r *MongoRepository) Find(componentRef string) ([]models.Incident, error) {
 	err := r.db.DB(databaseName).C("Component").Find(query).Select(incidentFilter).One(&component)
 	if err != nil && err != mgo.ErrNotFound {
 		log.Panicf("Error finding component: %s\n", err)
+	}
+	if err == mgo.ErrNotFound {
+		return component.Incidents, errors.E(errors.ErrNotFound)
 	}
 	return component.Incidents, err
 }

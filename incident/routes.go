@@ -11,8 +11,8 @@ func IncidentRouter(incidentRepo Repository, router *gin.RouterGroup) {
 
 	incidentRouter := router.Group("/incident")
 	{
-		incidentRouter.POST("/:componentId", incidentController.Create)
-		incidentRouter.GET("/:componentId", incidentController.Find)
+		incidentRouter.POST("/:componentName", incidentController.Create)
+		incidentRouter.GET("/:componentName", incidentController.Find)
 	}
 
 	incidentsRouter := router.Group("/incidents")
