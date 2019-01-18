@@ -15,21 +15,25 @@ func NewService(r Repository) *ComponentService {
 	return &ComponentService{repo: r}
 }
 
-func (s *ComponentService) componentExists(name string) (models.Component, bool) {
-	c, err := s.repo.Find(map[string]interface{}{"name": name})
+func (s *ComponentService) componentExists(componentFields map[string]interface{}) (models.Component, bool) {
+	c, err := s.repo.Find(componentFields)
 	return c, err == nil
 }
 
 func (s *ComponentService) CreateComponent(component models.Component) (string, error) {
-	_, exist := s.componentExists(component.Name)
-	if component.Ref != "" && exist {
-		return component.Ref, errors.E(fmt.Sprintf(errors.ErrInvalidRef, component.Ref))
+	if 	_, exist := s.componentExists(map[string]interface{}{"name": component.Name}); exist {
+		return component.Ref, errors.E(fmt.Sprintf(errors.ErrAlreadyExists, component.Name))
+	}
+	if component.Ref != "" {
+		if _, exist := s.componentExists(map[string]interface{}{"ref": component.Ref}); exist {
+			return component.Ref, errors.E(fmt.Sprintf(errors.ErrAlreadyExists, component.Ref))
+		}
 	}
 	return s.repo.Insert(component)
 }
 
 func (s *ComponentService) UpdateComponent(ref string, component models.Component) error {
-	c, exist := s.componentExists(component.Name)
+	c, exist := s.componentExists(map[string]interface{}{"name": component.Name})
 	if exist && c.Ref != ref {
 		return errors.E(fmt.Sprintf(errors.ErrAlreadyExists, component.Name))
 	}
