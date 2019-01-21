@@ -15,17 +15,17 @@ func NewService(r Repository) *ComponentService {
 	return &ComponentService{repo: r}
 }
 
-func (s *ComponentService) componentExists(componentFields map[string]interface{}) (models.Component, bool) {
+func (s *ComponentService) ComponentExists(componentFields map[string]interface{}) (models.Component, bool) {
 	c, err := s.repo.Find(componentFields)
 	return c, err == nil
 }
 
 func (s *ComponentService) CreateComponent(component models.Component) (string, error) {
-	if _, exist := s.componentExists(map[string]interface{}{"name": component.Name}); exist {
+	if _, exist := s.ComponentExists(map[string]interface{}{"name": component.Name}); exist {
 		return component.Name, errors.E(fmt.Sprintf(errors.ErrAlreadyExists, component.Name))
 	}
 	if component.Ref != "" {
-		if _, exist := s.componentExists(map[string]interface{}{"ref": component.Ref}); exist {
+		if _, exist := s.ComponentExists(map[string]interface{}{"ref": component.Ref}); exist {
 			return component.Ref, errors.E(fmt.Sprintf(errors.ErrAlreadyExists, component.Ref))
 		}
 	}
@@ -33,7 +33,7 @@ func (s *ComponentService) CreateComponent(component models.Component) (string, 
 }
 
 func (s *ComponentService) UpdateComponent(ref string, component models.Component) error {
-	c, exist := s.componentExists(map[string]interface{}{"name": component.Name})
+	c, exist := s.ComponentExists(map[string]interface{}{"name": component.Name})
 	if exist && c.Ref != ref {
 		return errors.E(fmt.Sprintf(errors.ErrAlreadyExists, component.Name))
 	}

@@ -19,31 +19,31 @@ func NewIncidentController(service Service) *IncidentController {
 func (ctrl *IncidentController) Create(c *gin.Context) {
 	var newIncident models.Incident
 	if err := c.ShouldBindJSON(&newIncident); err != nil {
-		c.JSON(http.StatusBadRequest, "missing required parameter "+err.Error())
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	componentID := c.Param("componentName")
-	err := ctrl.service.CreateIncidents(componentID, newIncident)
+	err := ctrl.service.CreateIncidents(newIncident)
 	if err != nil {
 		if err.Error() == errors.ErrNotFound {
-			c.JSON(http.StatusNotFound, err.Error())
+			c.AbortWithError(http.StatusNotFound, err)
 			return
 		}
-		c.JSON(http.StatusInternalServerError, "")
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 	c.JSON(http.StatusCreated, "")
 }
 
 func (ctrl *IncidentController) Find(c *gin.Context) {
-	componentID := c.Param("componentName")
-	incidents, err := ctrl.service.FindIncidents(componentID)
+	queryBy := c.DefaultQuery("search", "component_ref")
+	queryValue := c.Param("componentRef")
+	incidents, err := ctrl.service.FindIncidents(map[string]interface{}{queryBy: queryValue})
 	if err != nil {
 		if err.Error() == errors.ErrNotFound {
-			c.JSON(http.StatusNotFound, "")
+			c.AbortWithError(http.StatusNotFound, err)
 			return
 		}
-		c.JSON(http.StatusInternalServerError, "")
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 	c.JSON(http.StatusOK, incidents)
@@ -56,10 +56,10 @@ func (ctrl *IncidentController) List(c *gin.Context) {
 	incidents, err := ctrl.service.ListIncidents(yQ, mQ)
 	if err != nil {
 		if err.Error() == errors.ErrInvalidYear || err.Error() == errors.ErrInvalidMonth {
-			c.JSON(http.StatusBadRequest, "")
+			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
-		c.JSON(http.StatusInternalServerError, "")
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 	c.JSON(http.StatusOK, incidents)

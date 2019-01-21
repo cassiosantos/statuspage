@@ -6,15 +6,10 @@ import (
 
 // Incident represents some event categorized by one three possible status
 type Incident struct {
-	Status      int       `json:"status" binding:"required"`
-	Description string    `json:"description,omitempty"`
-	Date        time.Time `json:"occurrence_date" binding:"required"`
-}
-
-// IncidentWithComponentName is a structure of an Incident with it's Component Name
-type IncidentWithComponentName struct {
-	Component string   `json:"component"`
-	Incident  Incident `json:"incident"`
+	Status       int       `json:"status" binding:"required"`
+	Description  string    `json:"description,omitempty"`
+	Date         time.Time `json:"occurrence_date" binding:"required"`
+	ComponentRef string    `json:"component_ref" bson:"component_ref" binding:"required"`
 }
 
 const (

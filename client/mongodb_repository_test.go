@@ -1,10 +1,11 @@
-package client
+package client_test
 
 import (
 	"log"
 	"testing"
 
 	mgo "github.com/globalsign/mgo"
+	"github.com/involvestecnologia/statuspage/client"
 	"github.com/involvestecnologia/statuspage/db"
 	"github.com/involvestecnologia/statuspage/models"
 	"github.com/stretchr/testify/assert"
@@ -28,15 +29,14 @@ func init() {
 }
 
 func TestClientMongoDB_Repository_NewMongoRepository(t *testing.T) {
-	var mongoRepo *MongoRepository
-	repo := NewMongoRepository(testSession)
+	var mongoRepo *client.MongoRepository
+	repo := client.NewMongoRepository(testSession)
 	assert.IsType(t, mongoRepo, repo)
-	assert.Equal(t, testSession, repo.db)
 }
 
 func TestClientMongoDB_Repository_Insert(t *testing.T) {
 
-	repo := NewMongoRepository(testSession)
+	repo := client.NewMongoRepository(testSession)
 	ref, err := repo.Insert(c)
 	c.Ref = ref
 	assert.Nil(t, err)
@@ -47,7 +47,7 @@ func TestClientMongoDB_Repository_Insert(t *testing.T) {
 }
 
 func TestClientMongoDB_Repository_Update(t *testing.T) {
-	repo := NewMongoRepository(testSession)
+	repo := client.NewMongoRepository(testSession)
 
 	c.Name = "Updated Test Client"
 
@@ -65,7 +65,7 @@ func TestClientMongoDB_Repository_Update(t *testing.T) {
 }
 
 func TestClientMongoDB_Repository_Find(t *testing.T) {
-	repo := NewMongoRepository(testSession)
+	repo := client.NewMongoRepository(testSession)
 	c2, err := repo.Find(map[string]interface{}{"ref": c.Ref})
 	if assert.Nil(t, err) && assert.NotNil(t, c2) {
 		assert.Equal(t, c, c2)
@@ -84,7 +84,7 @@ func TestClientMongoDB_Repository_Find(t *testing.T) {
 }
 
 func TestClientMongoDB_Repository_Delete(t *testing.T) {
-	repo := NewMongoRepository(testSession)
+	repo := client.NewMongoRepository(testSession)
 	c2, err := repo.Find(map[string]interface{}{"ref": c.Ref})
 	if assert.Nil(t, err) && assert.NotNil(t, c2) {
 		assert.Equal(t, c, c2)
@@ -104,7 +104,7 @@ func TestClientMongoDB_Repository_Delete(t *testing.T) {
 }
 
 func TestClientMongoDB_Repository_List(t *testing.T) {
-	repo := NewMongoRepository(testSession)
+	repo := client.NewMongoRepository(testSession)
 
 	clients, err := repo.List()
 	assert.Nil(t, clients)

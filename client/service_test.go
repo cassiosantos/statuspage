@@ -1,29 +1,23 @@
-package client
+package client_test
 
 import (
 	"testing"
 
 	"github.com/globalsign/mgo/bson"
-	"github.com/involvestecnologia/statuspage/errors"
+	"github.com/involvestecnologia/statuspage/client"
+	"github.com/involvestecnologia/statuspage/mock"
 	"github.com/involvestecnologia/statuspage/models"
 
 	"github.com/stretchr/testify/assert"
 )
 
-const (
-	zeroTimeHex   = "886e09000000000000000000"
-	oneSecTimeHex = "886e09010000000000000000"
-)
-
 func TestNewClientService(t *testing.T) {
-	dao := newMockClientDAO()
-	s := NewService(dao)
-	assert.Equal(t, dao, s.repo)
-
+	dao := mock.NewMockClientDAO()
+	assert.Implements(t, (*client.Service)(nil), client.NewService(dao))
 }
 
 func TestClientService_CreateClient(t *testing.T) {
-	s := NewService(newMockClientDAO())
+	s := client.NewService(mock.NewMockClientDAO())
 	c := models.Client{
 		Name:      "test",
 		Resources: make([]string, 0),
@@ -44,12 +38,12 @@ func TestClientService_CreateClient(t *testing.T) {
 	assert.NotNil(t, err)
 }
 func TestClientService_FindClient(t *testing.T) {
-	s := NewService(newMockClientDAO())
+	s := client.NewService(mock.NewMockClientDAO())
 
-	c, err := s.FindClient(map[string]interface{}{"ref": zeroTimeHex})
+	c, err := s.FindClient(map[string]interface{}{"ref": mock.ZeroTimeHex})
 	if assert.Nil(t, err) && assert.NotNil(t, c) {
 		if assert.IsType(t, models.Client{}, c) {
-			assert.Equal(t, zeroTimeHex, c.Ref)
+			assert.Equal(t, mock.ZeroTimeHex, c.Ref)
 		}
 	}
 
@@ -70,121 +64,39 @@ func TestClientService_FindClient(t *testing.T) {
 	assert.NotNil(t, err)
 }
 func TestClientService_ListClients(t *testing.T) {
-	s := NewService(newMockClientDAO())
+	s := client.NewService(mock.NewMockClientDAO())
 
 	c, err := s.ListClients()
 	if assert.Nil(t, err) && assert.NotNil(t, c) {
 		if assert.IsType(t, []models.Client{}, c) {
-			assert.Equal(t, zeroTimeHex, c[0].Ref)
-			assert.Equal(t, oneSecTimeHex, c[len(c)-1].Ref)
+			assert.Equal(t, mock.ZeroTimeHex, c[0].Ref)
+			assert.Equal(t, mock.OneSecTimeHex, c[len(c)-1].Ref)
 		}
 	}
 }
 func TestClientService_RemoveClient(t *testing.T) {
-	s := NewService(newMockClientDAO())
-	err := s.RemoveClient(oneSecTimeHex)
+	s := client.NewService(mock.NewMockClientDAO())
+	err := s.RemoveClient(mock.OneSecTimeHex)
 	assert.Nil(t, err)
 
-	_, err = s.FindClient(map[string]interface{}{"ref": oneSecTimeHex})
+	_, err = s.FindClient(map[string]interface{}{"ref": mock.OneSecTimeHex})
 	assert.NotNil(t, err)
 }
 func TestClientService_UpdateClient(t *testing.T) {
-	s := NewService(newMockClientDAO())
+	s := client.NewService(mock.NewMockClientDAO())
 
-	c, err := s.FindClient(map[string]interface{}{"ref": zeroTimeHex})
+	c, err := s.FindClient(map[string]interface{}{"ref": mock.ZeroTimeHex})
 	assert.Nil(t, err)
 	assert.NotNil(t, c)
 
 	c.Name = "Modified First Client"
 
-	err = s.UpdateClient(zeroTimeHex, c)
+	err = s.UpdateClient(mock.ZeroTimeHex, c)
 	assert.Nil(t, err)
 
-	c2, err := s.FindClient(map[string]interface{}{"ref": zeroTimeHex})
+	c2, err := s.FindClient(map[string]interface{}{"ref": mock.ZeroTimeHex})
 	assert.Nil(t, err)
 	assert.NotNil(t, c2)
 
 	assert.Equal(t, c, c2)
-}
-
-type mockClientDAO struct {
-	clients []models.Client
-}
-
-func newMockClientDAO() Repository {
-	return &mockClientDAO{
-		clients: []models.Client{
-			models.Client{
-				Ref:  zeroTimeHex,
-				Name: "First Client",
-				Resources: []string{
-					bson.NewObjectIdWithTime(bson.Now()).Hex(),
-					bson.NewObjectIdWithTime(bson.Now()).Hex(),
-					bson.NewObjectIdWithTime(bson.Now()).Hex(),
-				},
-			},
-			models.Client{
-				Ref:  oneSecTimeHex,
-				Name: "Last Client",
-				Resources: []string{
-					bson.NewObjectIdWithTime(bson.Now()).Hex(),
-				},
-			},
-		},
-	}
-}
-
-func (m *mockClientDAO) Delete(clientRef string) error {
-	for i, c := range m.clients {
-		if c.Ref == clientRef {
-			m.clients = append(m.clients[:i], m.clients[i+1:]...)
-			return nil
-		}
-	}
-	return errors.E(errors.ErrNotFound)
-}
-
-func (m *mockClientDAO) Find(q map[string]interface{}) (models.Client, error) {
-	if keyValue, hasKey := q["ref"]; hasKey {
-		for _, c := range m.clients {
-			if c.Ref == keyValue {
-				return c, nil
-			}
-		}
-	} else {
-		if keyValue, hasKey := q["name"]; hasKey {
-			for _, c := range m.clients {
-				if c.Name == keyValue {
-					return c, nil
-				}
-			}
-		} else {
-			return models.Client{}, errors.E("No queryable parameters passed")
-		}
-	}
-
-	return models.Client{}, errors.E(errors.ErrNotFound)
-}
-
-func (m *mockClientDAO) Insert(client models.Client) (string, error) {
-	if client.Ref == "" {
-		client.Ref = bson.NewObjectId().Hex()
-	}
-	m.clients = append(m.clients, client)
-	return client.Ref, nil
-}
-
-func (m *mockClientDAO) List() ([]models.Client, error) {
-	return m.clients, nil
-}
-
-func (m *mockClientDAO) Update(clientRef string, client models.Client) error {
-	for i, c := range m.clients {
-		if c.Ref == clientRef {
-			m.clients[i].Name = client.Name
-			m.clients[i].Resources = client.Resources
-			return nil
-		}
-	}
-	return errors.E(errors.ErrNotFound)
 }

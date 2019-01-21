@@ -20,60 +20,38 @@ func NewMongoRepository(session *mgo.Session) *MongoRepository {
 	return &MongoRepository{db: session}
 }
 
-func (r *MongoRepository) Insert(componentName string, incident models.Incident) error {
-	findCompQ := bson.M{"name": componentName}
-	insertIncidentQ := bson.M{"$push": bson.M{"incidents": incident}}
-	err := r.db.DB(databaseName).C("Component").Update(findCompQ, insertIncidentQ)
+func (r *MongoRepository) Insert(incident models.Incident) error {
+	err := r.db.DB(databaseName).C("Incidents").Insert(incident)
 	if err != nil && err != mgo.ErrNotFound {
-		log.Panicf("Error updating component: %s\n", err)
-	}
-	if err == mgo.ErrNotFound {
-		return errors.E(errors.ErrNotFound)
+		log.Panicf("Error inserting incident: %s\n", err)
 	}
 	return err
 }
 
-func (r *MongoRepository) Find(componentName string) ([]models.Incident, error) {
-	var component models.Component
+func (r *MongoRepository) Find(queryParam map[string]interface{}) ([]models.Incident, error) {
+	var incidents []models.Incident
 
-	findCompQ := bson.M{"name": componentName}
-	incidentQ := bson.M{"incidents": bson.M{"$not": bson.M{"$size": 0}}}
-	query := bson.M{"$and": []bson.M{findCompQ, incidentQ}}
-	incidentFilter := bson.M{"incidents": 1}
-
-	err := r.db.DB(databaseName).C("Component").Find(query).Select(incidentFilter).One(&component)
+	err := r.db.DB(databaseName).C("Incidents").Find(queryParam).All(&incidents)
 	if err != nil && err != mgo.ErrNotFound {
 		log.Panicf("Error finding component: %s\n", err)
 	}
-	if err == mgo.ErrNotFound {
-		return component.Incidents, errors.E(errors.ErrNotFound)
+	if incidents == nil {
+		return incidents, errors.E(errors.ErrNotFound)
 	}
-	return component.Incidents, err
+	return incidents, err
 }
 
-func (r *MongoRepository) List(startDt time.Time, endDt time.Time) ([]models.IncidentWithComponentName, error) {
-	var incidents []models.IncidentWithComponentName
+func (r *MongoRepository) List(startDt time.Time, endDt time.Time) ([]models.Incident, error) {
+	var incidents []models.Incident
 
-	unwind := bson.M{"$unwind": "$incident"}
-
-	project := bson.M{"$project": bson.M{
-		"component": "$name",
-		"incident":  "$incidents",
-	}}
-
-	pipeline := []bson.M{project, unwind}
-	defaultTime := time.Time{}
-	if defaultTime != startDt {
-		match := bson.M{"$match": bson.M{
-			"incident.date": bson.M{
-				"$gt": startDt.Add(-(24 * time.Hour)),
-				"$lt": endDt.Add(24 * time.Hour),
-			},
-		}}
-		pipeline = append(pipeline, match)
+	findQ := bson.M{
+		"date": bson.M{
+			"$gt": startDt.Add(-(24 * time.Hour)),
+			"$lt": endDt.Add(24 * time.Hour),
+		},
 	}
 
-	err := r.db.DB(databaseName).C("Component").Pipe(pipeline).All(&incidents)
+	err := r.db.DB(databaseName).C("Incidents").Find(findQ).All(&incidents)
 	if err != nil {
 		log.Panicf("Error searching components: %s\n", err)
 	}

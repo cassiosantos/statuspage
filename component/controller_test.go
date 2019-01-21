@@ -1,4 +1,4 @@
-package component
+package component_test
 
 import (
 	"bytes"
@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/involvestecnologia/statuspage/component"
+	"github.com/involvestecnologia/statuspage/mock"
 	"github.com/involvestecnologia/statuspage/models"
 
 	"github.com/gin-gonic/gin"
@@ -16,10 +18,10 @@ import (
 const routerGroupName = "/test"
 
 var router = gin.Default()
-var componentMockDAO = newMockComponentDAO()
+var componentMockDAO = mock.NewMockComponentDAO()
 
 func init() {
-	ComponentRouter(componentMockDAO, router.Group(routerGroupName))
+	component.ComponentRouter(componentMockDAO, router.Group(routerGroupName))
 }
 
 func performRequest(t *testing.T, r http.Handler, method, path string, body []byte) *httptest.ResponseRecorder {

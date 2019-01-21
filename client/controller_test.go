@@ -1,4 +1,4 @@
-package client
+package client_test
 
 import (
 	"bytes"
@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/involvestecnologia/statuspage/client"
+	"github.com/involvestecnologia/statuspage/mock"
 	"github.com/involvestecnologia/statuspage/models"
 
 	"github.com/gin-gonic/gin"
@@ -16,10 +18,10 @@ import (
 const routerGroupName = "/test"
 
 var router = gin.Default()
-var clientMockDAO = newMockClientDAO()
+var clientMockDAO = mock.NewMockClientDAO()
 
 func init() {
-	ClientRouter(clientMockDAO, router.Group(routerGroupName))
+	client.ClientRouter(clientMockDAO, router.Group(routerGroupName))
 }
 
 func performRequest(t *testing.T, r http.Handler, method, path string, body []byte) *httptest.ResponseRecorder {

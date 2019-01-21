@@ -4,39 +4,47 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/involvestecnologia/statuspage/component"
 	"github.com/involvestecnologia/statuspage/errors"
 	"github.com/involvestecnologia/statuspage/models"
 )
 
 type IncidentService struct {
-	repo Repository
+	component component.Service
+	repo      Repository
 }
 
-func NewService(r Repository) *IncidentService {
-	return &IncidentService{repo: r}
+func NewService(r Repository, component component.Service) *IncidentService {
+	return &IncidentService{
+		component: component,
+		repo:      r}
 }
 
-func (s *IncidentService) CreateIncidents(componentName string, incident models.Incident) error {
-	return s.repo.Insert(componentName, incident)
+func (s *IncidentService) CreateIncidents(incident models.Incident) error {
+	_, err := s.component.FindComponent(map[string]interface{}{"ref": incident.ComponentRef})
+	if err != nil {
+		return err
+	}
+	return s.repo.Insert(incident)
 }
 
-func (s *IncidentService) FindIncidents(componentName string) ([]models.Incident, error) {
-	return s.repo.Find(componentName)
+func (s *IncidentService) FindIncidents(query map[string]interface{}) ([]models.Incident, error) {
+	return s.repo.Find(query)
 }
 
-func (s *IncidentService) ListIncidents(year string, month string) ([]models.IncidentWithComponentName, error) {
-	var iComp []models.IncidentWithComponentName
+func (s *IncidentService) ListIncidents(year string, month string) ([]models.Incident, error) {
+	var iComp []models.Incident
 	var start, end time.Time
 	if year == "" && month == "" {
 		return s.repo.List(start, end)
 	}
 
-	m, err := s.validateMonth(month)
+	m, err := s.ValidateMonth(month)
 	if err != nil && month != "" {
 		return iComp, err
 	}
 
-	y, err := s.validateYear(year)
+	y, err := s.ValidateYear(year)
 	if err != nil && year != "" {
 		return iComp, err
 	}
@@ -57,7 +65,7 @@ func (s *IncidentService) ListIncidents(year string, month string) ([]models.Inc
 	return s.repo.List(start, end)
 }
 
-func (s *IncidentService) validateMonth(month string) (int, error) {
+func (s *IncidentService) ValidateMonth(month string) (int, error) {
 	m, err := strconv.Atoi(month)
 	if err != nil {
 		return -1, err
@@ -69,7 +77,7 @@ func (s *IncidentService) validateMonth(month string) (int, error) {
 	return m, nil
 }
 
-func (s *IncidentService) validateYear(year string) (int, error) {
+func (s *IncidentService) ValidateYear(year string) (int, error) {
 	y, err := strconv.Atoi(year)
 	if err != nil {
 		return -1, err
