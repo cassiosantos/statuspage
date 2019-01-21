@@ -17,7 +17,7 @@ func NewPrometheusService(incident incident.Service, component component.Service
 	return &prometheusService{incident: incident, component: component}
 }
 
-func (svc *prometheusService) PrometheusIncoming(incoming models.PrometheusIncomingWebhook) error {
+func (svc *prometheusService) ProcessIncomingWebhook(incoming models.PrometheusIncomingWebhook) error {
 	for _, alerts := range incoming.Alerts {
 		if ref, err := svc.component.CreateComponent(alerts.Component); err != nil {
 			if err.Error() != fmt.Sprintf(errors.ErrAlreadyExists, ref) {

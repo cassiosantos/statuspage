@@ -22,7 +22,7 @@ func (prom *prometheusController) Incoming(c *gin.Context) {
 		c.AbortWithError(http.StatusBadGateway, err)
 		return
 	}
-	err := prom.service.PrometheusIncoming(incoming)
+	err := prom.service.ProcessIncomingWebhook(incoming)
 	if err != nil {
 		if err.Error() == errors.ErrInvalidRef {
 			c.JSON(http.StatusBadRequest, err.Error())
