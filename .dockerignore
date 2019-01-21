@@ -10,6 +10,14 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+
+# Binary
 statuspage
-vendor/
-.idea
+
+# Git
+.git/
+.gitignore
+
+# Docs
+*.md
+LICENSE

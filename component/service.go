@@ -1,6 +1,9 @@
 package component
 
 import (
+	"fmt"
+
+	"github.com/involvestecnologia/statuspage/errors"
 	"github.com/involvestecnologia/statuspage/models"
 )
 
@@ -12,42 +15,42 @@ func NewService(r Repository) *ComponentService {
 	return &ComponentService{repo: r}
 }
 
-func (s *ComponentService) ComponentExists(name string) bool {
-	_, err := s.repo.GetComponentByName(name)
-	return err == nil
+func (s *ComponentService) componentExists(componentFields map[string]interface{}) (models.Component, bool) {
+	c, err := s.repo.Find(componentFields)
+	return c, err == nil
 }
 
-func (s *ComponentService) AddComponent(component models.Component) error {
-	return s.repo.AddComponent(component)
-}
-
-func (s *ComponentService) UpdateComponent(id string, component models.Component) error {
-	return s.repo.UpdateComponent(id, component)
-}
-
-func (s *ComponentService) GetComponent(queryBy string, id string) (models.Component, error) {
-	if queryBy == "name" {
-		return s.GetComponentByName(id)
+func (s *ComponentService) CreateComponent(component models.Component) (string, error) {
+	if _, exist := s.componentExists(map[string]interface{}{"name": component.Name}); exist {
+		return component.Name, errors.E(fmt.Sprintf(errors.ErrAlreadyExists, component.Name))
 	}
-	return s.GetComponentById(id)
+	if component.Ref != "" {
+		if _, exist := s.componentExists(map[string]interface{}{"ref": component.Ref}); exist {
+			return component.Ref, errors.E(fmt.Sprintf(errors.ErrAlreadyExists, component.Ref))
+		}
+	}
+	return s.repo.Insert(component)
 }
 
-func (s *ComponentService) GetComponentByName(name string) (models.Component, error) {
-	return s.repo.GetComponentByName(name)
+func (s *ComponentService) UpdateComponent(ref string, component models.Component) error {
+	c, exist := s.componentExists(map[string]interface{}{"name": component.Name})
+	if exist && c.Ref != ref {
+		return errors.E(fmt.Sprintf(errors.ErrAlreadyExists, component.Name))
+	}
+	return s.repo.Update(ref, component)
 }
 
-func (s *ComponentService) GetComponentById(id string) (models.Component, error) {
-	return s.repo.GetComponentById(id)
+func (s *ComponentService) FindComponent(queryParam map[string]interface{}) (models.Component, error) {
+	if len(queryParam) == 0 {
+		return models.Component{}, errors.E(errors.ErrInvalidQuery)
+	}
+	return s.repo.Find(queryParam)
 }
 
-func (s *ComponentService) GetAllComponents() ([]models.Component, error) {
-	return s.repo.GetAllComponents()
+func (s *ComponentService) ListComponents() ([]models.Component, error) {
+	return s.repo.List()
 }
 
-func (s *ComponentService) GetComponentsByGroup(groupName string) ([]models.Component, error) {
-	return s.repo.GetComponentsByGroup(groupName)
-}
-
-func (s *ComponentService) DeleteComponent(id string) error {
-	return s.repo.DeleteComponent(id)
+func (s *ComponentService) RemoveComponent(id string) error {
+	return s.repo.Delete(id)
 }

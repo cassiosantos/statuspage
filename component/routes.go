@@ -20,6 +20,5 @@ func ComponentRouter(componentRepo Repository, router *gin.RouterGroup) {
 	componentsRouter := router.Group("/components")
 	{
 		componentsRouter.GET("", componentController.List)
-		componentsRouter.GET("/group/:group", componentController.FindByGroup)
 	}
 }

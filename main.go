@@ -7,14 +7,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/involvestecnologia/statuspage/client"
 	"github.com/involvestecnologia/statuspage/component"
+	"github.com/involvestecnologia/statuspage/prometheus"
 	"github.com/involvestecnologia/statuspage/db"
 	"github.com/involvestecnologia/statuspage/incident"
 	"github.com/involvestecnologia/statuspage/middleware"
 )
 
 func main() {
-	mgouri := os.Getenv("MONGO_URI")
-	if mgouri == "" {
+	mgouri, exist := os.LookupEnv("MONGO_URI")
+	if !exist {
 		log.Panic("MongoDB URI not informed")
 	}
 	session := db.InitMongo(mgouri)
@@ -28,6 +29,7 @@ func main() {
 	component.ComponentRouter(component.NewMongoRepository(session), v1)
 	incident.IncidentRouter(incident.NewMongoRepository(session), v1)
 	client.ClientRouter(client.NewMongoRepository(session), v1)
+	prometheus.PrometheusRouter(incident.NewService(incident.NewMongoRepository(session)),component.NewService(component.NewMongoRepository(session)), v1)
 
 	router.Run(":8080")
 }
