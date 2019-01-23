@@ -20,7 +20,7 @@ func TestNewPrometheusService(t *testing.T) {
 	assert.Implements(t, (*Service)(nil), p)
 }
 
-func TestPrometheusService_ProcessIncomingWebhookReturnErr(t *testing.T) {
+func TestPrometheusService_ProcessIncomingWebhookReturnNil(t *testing.T) {
 	componentDAO := mock.NewMockComponentDAO()
 	incidentDAO := mock.NewMockIncidentDAO()
 	componentService := component.NewService(componentDAO)
@@ -35,6 +35,70 @@ func TestPrometheusService_ProcessIncomingWebhookReturnErr(t *testing.T) {
 				Incident: models.Incident{
 					ComponentRef: mock.ZeroTimeHex,
 					Description:  "status ok",
+					Status:       0,
+				},
+				Component: models.Component{
+					Ref:     mock.ZeroTimeHex,
+					Name:    "first",
+					Address: "",
+				},
+				StartsAt: time.Now(),
+				EndsAt: time.Now(),
+				GeneratorURL: "ur.com",
+			},
+		},
+
+	}
+
+	err := p.ProcessIncomingWebhook(m)
+	assert.Nil(t, err)
+}
+
+func TestPrometheusService_ProcessIncomingWebhookReturnErr(t *testing.T) {
+	componentDAO := mock.NewMockComponentDAO()
+	incidentDAO := mock.NewMockIncidentDAO()
+	componentService := component.NewService(componentDAO)
+	incidentService := incident.NewService(incidentDAO, componentService)
+
+	p := NewPrometheusService(incidentService, componentService)
+
+	m := models.PrometheusIncomingWebhook{
+		Alerts: []models.PrometheusAlerts{
+			models.PrometheusAlerts{
+				Status: "FIRING",
+				Incident: models.Incident{
+					ComponentRef: mock.ZeroTimeHex,
+					Description:  "status firing",
+					Status:       0,
+				},
+				Component: models.Component{},
+				StartsAt: time.Now(),
+				EndsAt: time.Now(),
+				GeneratorURL: "ur.com",
+			},
+		},
+
+	}
+
+	err := p.ProcessIncomingWebhook(m)
+	assert.NotNil(t, err)
+}
+
+func TestPrometheusService_ProcessIncomingWebhookReturnI(t *testing.T) {
+	componentDAO := mock.NewMockFailureComponentDAO()
+	incidentDAO := mock.NewMockIncidentDAO()
+	componentService := component.NewService(componentDAO)
+	incidentService := incident.NewService(incidentDAO, componentService)
+
+	p := NewPrometheusService(incidentService, componentService)
+
+	m := models.PrometheusIncomingWebhook{
+		Alerts: []models.PrometheusAlerts{
+			models.PrometheusAlerts{
+				Status: "FIRING",
+				Incident: models.Incident{
+					ComponentRef: mock.ZeroTimeHex,
+					Description:  "status firing",
 					Status:       0,
 				},
 				Component: models.Component{

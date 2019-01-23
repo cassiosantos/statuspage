@@ -2,6 +2,7 @@ package errors
 
 const (
 	ErrInvalidRef              = "Invalid reference %s"
+	ErrComponentNameIsEmpty    = "Component name shouldn't be empty"
 	ErrInvalidQuery            = "Invalid query"
 	ErrNotFound                = "Not found"
 	ErrAlreadyExists           = "%s already exists"
