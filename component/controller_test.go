@@ -82,6 +82,18 @@ func TestController_Update(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, resp.Code)
 
+	//Invalid: component name already exists
+	body = []byte(`{"name": "last","resources": []}`)
+	resp = performRequest(t, router, "PATCH", routerGroupName+"/component/886e09000000000000000000", body)
+
+	assert.Equal(t, http.StatusBadRequest, resp.Code)
+
+	//Invalid: component name is empty
+	body = []byte(`{"name": "","resources": []}`)
+	resp = performRequest(t, router, "PATCH", routerGroupName+"/component/886e09000000000000000000", body)
+
+	assert.Equal(t, http.StatusBadRequest, resp.Code)
+
 	//Invalid: inexistent component ref
 	body = []byte(`{"name": "test2","resources": []}`)
 	resp = performRequest(t, router, "PATCH", routerGroupName+"/component/test2", body)

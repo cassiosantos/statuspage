@@ -25,6 +25,7 @@ type Repository interface {
 
 // Service describes the use case
 type Service interface {
+	IsValidComponent(c models.Component) (bool, error, string)
 	ComponentExists(map[string]interface{}) (models.Component, bool)
 	CreateComponent(component models.Component) (string, error)
 	FindComponent(queryParam map[string]interface{}) (models.Component, error)

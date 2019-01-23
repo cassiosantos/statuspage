@@ -26,12 +26,14 @@ func (ctrl *ComponentController) Create(c *gin.Context) {
 
 	ref, err := ctrl.service.CreateComponent(newComponent)
 	if err != nil {
-		if err.Error() == fmt.Sprintf(errors.ErrAlreadyExists, ref) {
+		switch err.Error() {
+		case fmt.Sprintf(errors.ErrAlreadyExists, ref):
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
+		default:
+			c.JSON(http.StatusInternalServerError, "")
+			return
 		}
-		c.JSON(http.StatusInternalServerError, "")
-		return
 	}
 	c.JSON(http.StatusCreated, "")
 }
@@ -45,12 +47,17 @@ func (ctrl *ComponentController) Update(c *gin.Context) {
 	}
 	err := ctrl.service.UpdateComponent(id, newComponent)
 	if err != nil {
-		if err.Error() == errors.ErrNotFound {
+		switch err.Error() {
+		case errors.ErrNotFound:
 			c.JSON(http.StatusNotFound, "")
 			return
+		case fmt.Sprintf(errors.ErrAlreadyExists, newComponent.Name):
+			c.JSON(http.StatusBadRequest, err.Error())
+			return
+		default:
+			c.JSON(http.StatusInternalServerError, "")
+			return
 		}
-		c.JSON(http.StatusInternalServerError, "")
-		return
 	}
 	c.JSON(http.StatusOK, "")
 }

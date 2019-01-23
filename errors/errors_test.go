@@ -10,6 +10,7 @@ func TestDB_Error(t *testing.T) {
 
 	errConsts := []string{
 		ErrInvalidRef,
+		ErrComponentNameIsEmpty,
 		ErrInvalidQuery,
 		ErrNotFound,
 		ErrAlreadyExists,

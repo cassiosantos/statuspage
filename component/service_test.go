@@ -91,6 +91,11 @@ func TestComponentService_CreateComponent(t *testing.T) {
 	_, err = s.CreateComponent(c)
 	assert.NotNil(t, err)
 
+	c.Ref = ""
+	c.Name = ""
+	_, err = s.CreateComponent(c)
+	assert.NotNil(t, err)
+
 }
 func TestComponentService_UpdateComponent(t *testing.T) {
 	s := component.NewService(mock.NewMockComponentDAO())
@@ -108,6 +113,10 @@ func TestComponentService_UpdateComponent(t *testing.T) {
 		assert.Equal(t, c, comp)
 	}
 
+	err = s.UpdateComponent(mock.OneSecTimeHex, c)
+	assert.NotNil(t, err)
+
+	c.Name = ""
 	err = s.UpdateComponent(mock.OneSecTimeHex, c)
 	assert.NotNil(t, err)
 

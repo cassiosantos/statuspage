@@ -21,25 +21,22 @@ func (s *ComponentService) ComponentExists(componentFields map[string]interface{
 }
 
 func (s *ComponentService) CreateComponent(component models.Component) (string, error) {
-	if component.Name == "" {
-		return component.Ref, errors.E(errors.ErrComponentNameIsEmpty)
-	}
-	if _, exist := s.ComponentExists(map[string]interface{}{"name": component.Name}); exist {
-		return component.Ref, errors.E(fmt.Sprintf(errors.ErrAlreadyExists, component.Ref))
-	}
-	if component.Ref != "" {
-		if _, exist := s.ComponentExists(map[string]interface{}{"ref": component.Ref}); exist {
-			return component.Ref, errors.E(fmt.Sprintf(errors.ErrAlreadyExists, component.Ref))
-		}
+	if valid, err, failureRef := s.IsValidComponent(component); !valid {
+		return failureRef, err
 	}
 	return s.repo.Insert(component)
 }
 
 func (s *ComponentService) UpdateComponent(ref string, component models.Component) error {
+	component.Ref = ref
+	if component.Name == "" {
+		return errors.E(errors.ErrComponentNameIsEmpty)
+	}
 	c, exist := s.ComponentExists(map[string]interface{}{"name": component.Name})
 	if exist && c.Ref != ref {
-		return errors.E(fmt.Sprintf(errors.ErrAlreadyExists, component.Name))
+		return errors.E(fmt.Sprintf(errors.ErrAlreadyExists, c.Name))
 	}
+
 	return s.repo.Update(ref, component)
 }
 
@@ -56,4 +53,18 @@ func (s *ComponentService) ListComponents() ([]models.Component, error) {
 
 func (s *ComponentService) RemoveComponent(id string) error {
 	return s.repo.Delete(id)
+}
+
+func (s *ComponentService) IsValidComponent(c models.Component) (bool, error, string) {
+
+	if c.Name == "" {
+		return false, errors.E(errors.ErrComponentNameIsEmpty), c.Name
+	}
+	if _, exist := s.ComponentExists(map[string]interface{}{"name": c.Name}); exist {
+		return false, errors.E(fmt.Sprintf(errors.ErrAlreadyExists, c.Name)), c.Name
+	}
+	if _, exist := s.ComponentExists(map[string]interface{}{"ref": c.Ref}); exist {
+		return false, errors.E(fmt.Sprintf(errors.ErrAlreadyExists, c.Ref)), c.Ref
+	}
+	return true, nil, ""
 }
