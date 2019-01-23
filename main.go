@@ -21,15 +21,24 @@ func main() {
 	session := db.InitMongo(mgouri)
 
 	router := gin.Default()
-
 	router.Use(middleware.CORSMiddleware())
 
 	v1 := router.Group("/v1")
 
-	component.ComponentRouter(component.NewMongoRepository(session), v1)
-	incident.IncidentRouter(incident.NewMongoRepository(session), v1)
-	client.ClientRouter(client.NewMongoRepository(session), v1)
-	prometheus.PrometheusRouter(incident.NewService(incident.NewMongoRepository(session)),component.NewService(component.NewMongoRepository(session)), v1)
+	// Initialize repositories
+	componentRepository := component.NewMongoRepository(session)
+	incidentRepository := incident.NewMongoRepository(session)
+	clientRepository := client.NewMongoRepository(session)
+
+	// Initialize services
+	componentService := component.NewService(componentRepository)
+	incidentService := incident.NewService(incidentRepository,componentService)
+
+	// Initialize routers
+	component.ComponentRouter(componentRepository, v1)
+	incident.IncidentRouter(incidentRepository, componentService, v1)
+	client.ClientRouter(clientRepository, v1)
+	prometheus.PrometheusRouter(incidentService,componentService, v1)
 
 	router.Run(":8080")
 }
