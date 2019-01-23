@@ -2,7 +2,6 @@ package prometheus
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/involvestecnologia/statuspage/errors"
 	"github.com/involvestecnologia/statuspage/models"
 	"net/http"
 )
@@ -24,12 +23,7 @@ func (prom *prometheusController) Incoming(c *gin.Context) {
 	}
 	err := prom.service.ProcessIncomingWebhook(incoming)
 	if err != nil {
-		if err.Error() == errors.ErrInvalidRef {
-			c.JSON(http.StatusBadRequest, err.Error())
-			c.AbortWithError(http.StatusBadGateway, err)
-			return
-		}
-		c.JSON(http.StatusInternalServerError, "")
+		c.JSON(http.StatusInternalServerError, err.Error())
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}

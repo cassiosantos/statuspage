@@ -1,7 +1,6 @@
 package prometheus
 
 import (
-	"fmt"
 	"github.com/involvestecnologia/statuspage/component"
 	"github.com/involvestecnologia/statuspage/errors"
 	"github.com/involvestecnologia/statuspage/incident"
@@ -19,18 +18,19 @@ func NewPrometheusService(incident incident.Service, component component.Service
 
 func (svc *prometheusService) ProcessIncomingWebhook(incoming models.PrometheusIncomingWebhook) error {
 	for _, alerts := range incoming.Alerts {
-		ref, err := svc.component.CreateComponent(alerts.Component)
-		if err != nil {
-			switch err.Error() {
-			case fmt.Sprintf(errors.ErrAlreadyExists, ref):
-				break
-			case errors.ErrComponentNameIsEmpty:
-				break
-			default:
+		if alerts.Component.Name == "" {
+			return errors.E(errors.ErrComponentNameIsEmpty)
+		}
+		component, exists := svc.component.ComponentExists(map[string]interface{}{"name": alerts.Component.Name})
+		if ! exists {
+			ref, err := svc.component.CreateComponent(alerts.Component)
+			if err != nil {
 				return err
 			}
+			alerts.Incident.ComponentRef = ref
+		} else {
+			alerts.Incident.ComponentRef = component.Ref
 		}
-		alerts.Incident.ComponentRef = ref
 		if err := svc.incident.CreateIncidents(alerts.Incident); err != nil {
 			return err
 		}

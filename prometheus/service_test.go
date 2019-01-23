@@ -4,116 +4,55 @@ import (
 	"github.com/involvestecnologia/statuspage/component"
 	"github.com/involvestecnologia/statuspage/incident"
 	"github.com/involvestecnologia/statuspage/mock"
-	"github.com/involvestecnologia/statuspage/models"
 	"github.com/stretchr/testify/assert"
 	"testing"
-	"time"
 )
 
-func TestNewPrometheusService(t *testing.T) {
+func NewServicesMock() *prometheusService {
 	componentDAO := mock.NewMockComponentDAO()
 	incidentDAO := mock.NewMockIncidentDAO()
 	componentService := component.NewService(componentDAO)
 	incidentService := incident.NewService(incidentDAO, componentService)
-
-	p := NewPrometheusService(incidentService, componentService)
-	assert.Implements(t, (*Service)(nil), p)
+	return NewPrometheusService(incidentService, componentService)
 }
 
-func TestPrometheusService_ProcessIncomingWebhookReturnNil(t *testing.T) {
+func NewServiceIncidentFailureMock() *prometheusService {
 	componentDAO := mock.NewMockComponentDAO()
-	incidentDAO := mock.NewMockIncidentDAO()
+	incidentDAO := mock.NewMockFailureIncidentDAO()
 	componentService := component.NewService(componentDAO)
 	incidentService := incident.NewService(incidentDAO, componentService)
-
-	p := NewPrometheusService(incidentService, componentService)
-
-	m := models.PrometheusIncomingWebhook{
-		Alerts: []models.PrometheusAlerts{
-			models.PrometheusAlerts{
-				Status: "RESOLVED",
-				Incident: models.Incident{
-					ComponentRef: mock.ZeroTimeHex,
-					Description:  "status ok",
-					Status:       0,
-				},
-				Component: models.Component{
-					Ref:     mock.ZeroTimeHex,
-					Name:    "first",
-					Address: "",
-				},
-				StartsAt: time.Now(),
-				EndsAt: time.Now(),
-				GeneratorURL: "ur.com",
-			},
-		},
-
-	}
-
-	err := p.ProcessIncomingWebhook(m)
-	assert.Nil(t, err)
+	return NewPrometheusService(incidentService, componentService)
 }
 
-func TestPrometheusService_ProcessIncomingWebhookReturnErr(t *testing.T) {
-	componentDAO := mock.NewMockComponentDAO()
-	incidentDAO := mock.NewMockIncidentDAO()
-	componentService := component.NewService(componentDAO)
-	incidentService := incident.NewService(incidentDAO, componentService)
-
-	p := NewPrometheusService(incidentService, componentService)
-
-	m := models.PrometheusIncomingWebhook{
-		Alerts: []models.PrometheusAlerts{
-			models.PrometheusAlerts{
-				Status: "FIRING",
-				Incident: models.Incident{
-					ComponentRef: mock.ZeroTimeHex,
-					Description:  "status firing",
-					Status:       0,
-				},
-				Component: models.Component{},
-				StartsAt: time.Now(),
-				EndsAt: time.Now(),
-				GeneratorURL: "ur.com",
-			},
-		},
-
-	}
-
-	err := p.ProcessIncomingWebhook(m)
-	assert.NotNil(t, err)
-}
-
-func TestPrometheusService_ProcessIncomingWebhookReturnI(t *testing.T) {
+func NewServiceComponentFailureMock() *prometheusService {
 	componentDAO := mock.NewMockFailureComponentDAO()
 	incidentDAO := mock.NewMockIncidentDAO()
 	componentService := component.NewService(componentDAO)
 	incidentService := incident.NewService(incidentDAO, componentService)
+	return NewPrometheusService(incidentService, componentService)
+}
 
-	p := NewPrometheusService(incidentService, componentService)
+func TestPrometheusService_Service(t *testing.T) {
+	assert.Implements(t, (*Service)(nil), NewServicesMock())
+}
 
-	m := models.PrometheusIncomingWebhook{
-		Alerts: []models.PrometheusAlerts{
-			models.PrometheusAlerts{
-				Status: "FIRING",
-				Incident: models.Incident{
-					ComponentRef: mock.ZeroTimeHex,
-					Description:  "status firing",
-					Status:       0,
-				},
-				Component: models.Component{
-					Ref:     mock.ZeroTimeHex,
-					Name:    "first",
-					Address: "",
-				},
-				StartsAt: time.Now(),
-				EndsAt: time.Now(),
-				GeneratorURL: "ur.com",
-			},
-		},
+func TestPrometheusService_ProcessIncomingWebhookReturnNil(t *testing.T) {
+	newPrometheusMock := mock.PrometheusModel()
+	err := NewServicesMock().ProcessIncomingWebhook(newPrometheusMock["ModelComplete"])
+	assert.Nil(t, err)
+}
 
-	}
+func TestPrometheusService_ProcessIncomingWebhookReturnIncidentErr(t *testing.T) {
+	newPrometheusMock := mock.PrometheusModel()
+	err := NewServiceIncidentFailureMock().ProcessIncomingWebhook(newPrometheusMock["ModelWithoutRef"])
+	assert.NotNil(t, err)
 
-	err := p.ProcessIncomingWebhook(m)
+	err = NewServiceIncidentFailureMock().ProcessIncomingWebhook(newPrometheusMock["ModelWithoutName"])
+	assert.NotNil(t, err)
+}
+
+func TestPrometheusService_ProcessIncomingWebhookReturnComponentErr(t *testing.T) {
+	newPrometheusMock := mock.PrometheusModel()
+	err := NewServiceComponentFailureMock().ProcessIncomingWebhook(newPrometheusMock["ModelWithoutRef"])
 	assert.NotNil(t, err)
 }
