@@ -4,9 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ComponentRouter(componentRepo Repository, router *gin.RouterGroup) {
+func ComponentRouter(componentService Service, router *gin.RouterGroup) {
 
-	componentService := NewService(componentRepo)
 	componentController := NewComponentController(componentService)
 
 	componentRouter := router.Group("/component")

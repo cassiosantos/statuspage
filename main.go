@@ -7,10 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/involvestecnologia/statuspage/client"
 	"github.com/involvestecnologia/statuspage/component"
-	"github.com/involvestecnologia/statuspage/prometheus"
 	"github.com/involvestecnologia/statuspage/db"
 	"github.com/involvestecnologia/statuspage/incident"
 	"github.com/involvestecnologia/statuspage/middleware"
+	"github.com/involvestecnologia/statuspage/prometheus"
 )
 
 func main() {
@@ -32,13 +32,14 @@ func main() {
 
 	// Initialize services
 	componentService := component.NewService(componentRepository)
-	incidentService := incident.NewService(incidentRepository,componentService)
+	incidentService := incident.NewService(incidentRepository, componentService)
+	clientService := client.NewService(clientRepository, componentService)
 
 	// Initialize routers
-	component.ComponentRouter(componentRepository, v1)
-	incident.IncidentRouter(incidentRepository, componentService, v1)
-	client.ClientRouter(clientRepository, v1)
-	prometheus.PrometheusRouter(incidentService,componentService, v1)
+	component.ComponentRouter(componentService, v1)
+	incident.IncidentRouter(incidentService, v1)
+	client.ClientRouter(clientService, v1)
+	prometheus.PrometheusRouter(incidentService, componentService, v1)
 
 	router.Run(":8080")
 }

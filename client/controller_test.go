@@ -20,13 +20,13 @@ const routerGroupName = "/test"
 const failureRouterGroupName = "/failure"
 
 var router = gin.Default()
-var clientMockDAO = mock.NewMockClientDAO()
-var failureClientDAO = mock.NewMockFailureClientDAO()
 var compSvc = component.NewService(mock.NewMockComponentDAO())
 
 func init() {
-	client.ClientRouter(clientMockDAO, compSvc, router.Group(routerGroupName))
-	client.ClientRouter(failureClientDAO, compSvc, router.Group(failureRouterGroupName))
+	clientService := client.NewService(mock.NewMockClientDAO(), compSvc)
+	clientFailureService := client.NewService(mock.NewMockFailureClientDAO(), compSvc)
+	client.ClientRouter(clientService, router.Group(routerGroupName))
+	client.ClientRouter(clientFailureService, router.Group(failureRouterGroupName))
 }
 
 func performRequest(t *testing.T, r http.Handler, method, path string, body []byte) *httptest.ResponseRecorder {
