@@ -2,11 +2,12 @@ package client
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/involvestecnologia/statuspage/component"
 )
 
-func ClientRouter(clientRepo Repository, router *gin.RouterGroup) {
+func ClientRouter(clientRepo Repository, componentSvc component.Service, router *gin.RouterGroup) {
 
-	clientService := NewService(clientRepo)
+	clientService := NewService(clientRepo, componentSvc)
 	clientController := NewClientController(clientService)
 
 	clientRouter := router.Group("/client")

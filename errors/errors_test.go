@@ -17,6 +17,7 @@ func TestDB_Error(t *testing.T) {
 		ErrInvalidYear,
 		ErrTriggerUnavailable,
 		ErrInvalidIncidentJSONDate,
+		ErrMongoFailuere,
 	}
 
 	for _, e := range errConsts {

@@ -1,10 +1,12 @@
 package mock
 
 import (
+	"fmt"
+
+	"github.com/globalsign/mgo/bson"
 	"github.com/involvestecnologia/statuspage/component"
 	"github.com/involvestecnologia/statuspage/errors"
 	"github.com/involvestecnologia/statuspage/models"
-	"gopkg.in/mgo.v2/bson"
 )
 
 type MockComponentDAO struct {
@@ -93,4 +95,27 @@ func (m *MockComponentDAO) Delete(ref string) error {
 		}
 	}
 	return errors.E(errors.ErrNotFound)
+}
+
+type MockFailureComponentDAO struct {
+}
+
+func NewMockFailureComponentDAO() component.Repository {
+	return &MockFailureComponentDAO{}
+}
+
+func (m *MockFailureComponentDAO) List() ([]models.Component, error) {
+	return []models.Component{}, fmt.Errorf("DAO Failure")
+}
+func (m *MockFailureComponentDAO) Find(q map[string]interface{}) (models.Component, error) {
+	return models.Component{}, fmt.Errorf("DAO Failure")
+}
+func (m *MockFailureComponentDAO) Insert(component models.Component) (string, error) {
+	return "", fmt.Errorf("DAO Failure")
+}
+func (m *MockFailureComponentDAO) Update(ref string, component models.Component) error {
+	return fmt.Errorf("DAO Failure")
+}
+func (m *MockFailureComponentDAO) Delete(ref string) error {
+	return fmt.Errorf("DAO Failure")
 }

@@ -1,7 +1,7 @@
 package errors
 
 const (
-	ErrInvalidRef              = "Invalid Ref, the reference %s is already in use"
+	ErrInvalidRef              = "Invalid reference %s"
 	ErrInvalidQuery            = "Invalid query"
 	ErrNotFound                = "Not found"
 	ErrAlreadyExists           = "%s already exists"
@@ -9,6 +9,7 @@ const (
 	ErrInvalidYear             = "Invalid year"
 	ErrTriggerUnavailable      = "Unavailable Trigger"
 	ErrInvalidIncidentJSONDate = "Field occurence_date not found"
+	ErrMongoFailuere           = "Failed to perform operation on MongoDB"
 )
 
 func E(msg string) error {

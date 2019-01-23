@@ -1,10 +1,12 @@
 package mock
 
 import (
+	"fmt"
+
+	"github.com/globalsign/mgo/bson"
 	"github.com/involvestecnologia/statuspage/client"
 	"github.com/involvestecnologia/statuspage/errors"
 	"github.com/involvestecnologia/statuspage/models"
-	"gopkg.in/mgo.v2/bson"
 )
 
 type MockClientDAO struct {
@@ -87,4 +89,27 @@ func (m *MockClientDAO) Update(clientRef string, client models.Client) error {
 		}
 	}
 	return errors.E(errors.ErrNotFound)
+}
+
+type MockFailureClientDAO struct {
+}
+
+func NewMockFailureClientDAO() client.Repository {
+	return &MockFailureClientDAO{}
+}
+
+func (f *MockFailureClientDAO) Find(q map[string]interface{}) (models.Client, error) {
+	return models.Client{}, fmt.Errorf("DAO Failure")
+}
+func (f *MockFailureClientDAO) Delete(clientRef string) error {
+	return fmt.Errorf("DAO Failure")
+}
+func (f *MockFailureClientDAO) Insert(client models.Client) (string, error) {
+	return "", fmt.Errorf("DAO Failure")
+}
+func (f *MockFailureClientDAO) List() ([]models.Client, error) {
+	return []models.Client{}, fmt.Errorf("DAO Failure")
+}
+func (f *MockFailureClientDAO) Update(clientRef string, client models.Client) error {
+	return fmt.Errorf("DAO Failure")
 }

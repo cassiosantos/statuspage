@@ -5,6 +5,7 @@ import (
 
 	"github.com/globalsign/mgo/bson"
 	"github.com/involvestecnologia/statuspage/client"
+	"github.com/involvestecnologia/statuspage/component"
 	"github.com/involvestecnologia/statuspage/mock"
 	"github.com/involvestecnologia/statuspage/models"
 
@@ -13,11 +14,11 @@ import (
 
 func TestNewClientService(t *testing.T) {
 	dao := mock.NewMockClientDAO()
-	assert.Implements(t, (*client.Service)(nil), client.NewService(dao))
+	assert.Implements(t, (*client.Service)(nil), client.NewService(dao, component.NewService(mock.NewMockComponentDAO())))
 }
 
 func TestClientService_CreateClient(t *testing.T) {
-	s := client.NewService(mock.NewMockClientDAO())
+	s := client.NewService(mock.NewMockClientDAO(), component.NewService(mock.NewMockComponentDAO()))
 	c := models.Client{
 		Name:      "test",
 		Resources: make([]string, 0),
@@ -36,9 +37,16 @@ func TestClientService_CreateClient(t *testing.T) {
 
 	_, err = s.CreateClient(c)
 	assert.NotNil(t, err)
+
+	c3 := models.Client{
+		Name:      "test2",
+		Resources: []string{"Invalid Ref", "Another invalid Ref"},
+	}
+	_, err = s.CreateClient(c3)
+	assert.NotNil(t, err)
 }
 func TestClientService_FindClient(t *testing.T) {
-	s := client.NewService(mock.NewMockClientDAO())
+	s := client.NewService(mock.NewMockClientDAO(), component.NewService(mock.NewMockComponentDAO()))
 
 	c, err := s.FindClient(map[string]interface{}{"ref": mock.ZeroTimeHex})
 	if assert.Nil(t, err) && assert.NotNil(t, c) {
@@ -64,7 +72,7 @@ func TestClientService_FindClient(t *testing.T) {
 	assert.NotNil(t, err)
 }
 func TestClientService_ListClients(t *testing.T) {
-	s := client.NewService(mock.NewMockClientDAO())
+	s := client.NewService(mock.NewMockClientDAO(), component.NewService(mock.NewMockComponentDAO()))
 
 	c, err := s.ListClients()
 	if assert.Nil(t, err) && assert.NotNil(t, c) {
@@ -75,7 +83,7 @@ func TestClientService_ListClients(t *testing.T) {
 	}
 }
 func TestClientService_RemoveClient(t *testing.T) {
-	s := client.NewService(mock.NewMockClientDAO())
+	s := client.NewService(mock.NewMockClientDAO(), component.NewService(mock.NewMockComponentDAO()))
 	err := s.RemoveClient(mock.OneSecTimeHex)
 	assert.Nil(t, err)
 
@@ -83,7 +91,7 @@ func TestClientService_RemoveClient(t *testing.T) {
 	assert.NotNil(t, err)
 }
 func TestClientService_UpdateClient(t *testing.T) {
-	s := client.NewService(mock.NewMockClientDAO())
+	s := client.NewService(mock.NewMockClientDAO(), component.NewService(mock.NewMockComponentDAO()))
 
 	c, err := s.FindClient(map[string]interface{}{"ref": mock.ZeroTimeHex})
 	assert.Nil(t, err)
@@ -99,4 +107,12 @@ func TestClientService_UpdateClient(t *testing.T) {
 	assert.NotNil(t, c2)
 
 	assert.Equal(t, c, c2)
+
+	c3 := models.Client{
+		Ref:       c.Ref,
+		Name:      "test2",
+		Resources: []string{"Invalid Ref", "Another invalid Ref"},
+	}
+	err = s.UpdateClient(mock.ZeroTimeHex, c3)
+	assert.NotNil(t, err)
 }

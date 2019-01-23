@@ -16,6 +16,7 @@ import (
 const validMongoArgs = "localhost"
 
 var testSession *mgo.Session
+var failureSession *mgo.Session
 var i = models.Incident{
 	ComponentRef: mock.ZeroTimeHex,
 	Status:       models.IncidentStatusOutage,
@@ -54,6 +55,12 @@ func TestIncidentMongoDB_Repository_Insert(t *testing.T) {
 	if assert.Nil(t, err) && assert.NotNil(t, incidents) {
 		assert.Equal(t, []models.Incident{i}, incidents)
 	}
+
+	repo = incident.NewMongoRepository(failureSession)
+
+	err = repo.Insert(i)
+	assert.NotNil(t, err)
+
 }
 
 func TestIncidentMongoDB_Repository_Find(t *testing.T) {
@@ -70,6 +77,11 @@ func TestIncidentMongoDB_Repository_Find(t *testing.T) {
 	incidents, err = repo.Find(map[string]interface{}{"invalidQuery": "SomeValue"})
 	assert.NotNil(t, err)
 	assert.Nil(t, incidents)
+
+	repo = incident.NewMongoRepository(failureSession)
+	_, err = repo.Find(map[string]interface{}{"component_ref": c.Ref})
+	assert.NotNil(t, err)
+
 }
 
 func TestIncidentMongoDB_Repository_List(t *testing.T) {
@@ -88,4 +100,9 @@ func TestIncidentMongoDB_Repository_List(t *testing.T) {
 	if assert.Nil(t, err) && assert.Nil(t, incidents) {
 		assert.IsType(t, []models.Incident{}, incidents)
 	}
+
+	endDt = time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC)
+	repo = incident.NewMongoRepository(failureSession)
+	_, err = repo.List(startDt, endDt)
+	assert.NotNil(t, err)
 }

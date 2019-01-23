@@ -3,16 +3,22 @@ package client
 import (
 	"fmt"
 
+	"github.com/involvestecnologia/statuspage/component"
+
 	"github.com/involvestecnologia/statuspage/errors"
 	"github.com/involvestecnologia/statuspage/models"
 )
 
 type ClientService struct {
-	repo Repository
+	repo      Repository
+	component component.Service
 }
 
-func NewService(r Repository) *ClientService {
-	return &ClientService{repo: r}
+func NewService(r Repository, component component.Service) *ClientService {
+	return &ClientService{
+		repo:      r,
+		component: component,
+	}
 }
 
 func (s *ClientService) CreateClient(client models.Client) (string, error) {
@@ -24,11 +30,21 @@ func (s *ClientService) CreateClient(client models.Client) (string, error) {
 			return client.Ref, errors.E(fmt.Sprintf(errors.ErrAlreadyExists, client.Ref))
 		}
 	}
+	for _, compRef := range client.Resources {
+		if _, exists := s.component.ComponentExists(map[string]interface{}{"ref": compRef}); !exists {
+			return client.Ref, errors.E(errors.ErrInvalidRef)
+		}
+	}
 
 	return s.repo.Insert(client)
 }
 
 func (s *ClientService) UpdateClient(clientRef string, client models.Client) error {
+	for _, compRef := range client.Resources {
+		if _, exists := s.component.ComponentExists(map[string]interface{}{"ref": compRef}); !exists {
+			return errors.E(errors.ErrInvalidRef)
+		}
+	}
 	return s.repo.Update(clientRef, client)
 }
 

@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/involvestecnologia/statuspage/errors"
@@ -54,4 +55,21 @@ func (m *MockIncidentDAO) List(start time.Time, end time.Time) ([]models.Inciden
 func (m *MockIncidentDAO) Insert(incident models.Incident) error {
 	m.incidents = append(m.incidents, incident)
 	return nil
+}
+
+type MockFailureIncidentDAO struct {
+}
+
+func NewMockFailureIncidentDAO() incident.Repository {
+	return &MockFailureIncidentDAO{}
+}
+
+func (m *MockFailureIncidentDAO) Find(query map[string]interface{}) ([]models.Incident, error) {
+	return []models.Incident{}, fmt.Errorf("Failure DAO")
+}
+func (m *MockFailureIncidentDAO) List(start time.Time, end time.Time) ([]models.Incident, error) {
+	return []models.Incident{}, fmt.Errorf("Failure DAO")
+}
+func (m *MockFailureIncidentDAO) Insert(incident models.Incident) error {
+	return fmt.Errorf("Failure DAO")
 }

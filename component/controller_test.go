@@ -16,12 +16,15 @@ import (
 )
 
 const routerGroupName = "/test"
+const failureRouterGroupName = "/failure"
 
 var router = gin.Default()
 var componentMockDAO = mock.NewMockComponentDAO()
+var failureComponenMocktDAO = mock.NewMockFailureComponentDAO()
 
 func init() {
 	component.ComponentRouter(componentMockDAO, router.Group(routerGroupName))
+	component.ComponentRouter(failureComponenMocktDAO, router.Group(failureRouterGroupName))
 }
 
 func performRequest(t *testing.T, r http.Handler, method, path string, body []byte) *httptest.ResponseRecorder {
@@ -64,6 +67,12 @@ func TestController_Create(t *testing.T) {
 	resp = performRequest(t, router, "POST", routerGroupName+"/component", body)
 
 	assert.Equal(t, http.StatusBadRequest, resp.Code)
+
+	//Failure
+	body = []byte(`{"name": "new component","address": "t.e.s.t", "incidents_history": []}`)
+	resp = performRequest(t, router, "POST", failureRouterGroupName+"/component", body)
+
+	assert.Equal(t, http.StatusInternalServerError, resp.Code)
 }
 
 func TestController_Update(t *testing.T) {
@@ -84,6 +93,12 @@ func TestController_Update(t *testing.T) {
 	resp = performRequest(t, router, "PATCH", routerGroupName+"/component/886e09000000000000000000", body)
 
 	assert.Equal(t, http.StatusBadRequest, resp.Code)
+
+	//Failure
+	body = []byte(`{"name": "test1","resources": []}`)
+	resp = performRequest(t, router, "PATCH", failureRouterGroupName+"/component/886e09000000000000000000", body)
+
+	assert.Equal(t, http.StatusInternalServerError, resp.Code)
 }
 
 func TestController_Find(t *testing.T) {
@@ -108,10 +123,19 @@ func TestController_Find(t *testing.T) {
 	err = json.Unmarshal([]byte(resp.Body.String()), &data)
 	assert.Nil(t, err)
 	assert.NotNil(t, data)
+
+	//Failure
+	resp = performRequest(t, router, "GET", failureRouterGroupName+"/component/886e09000000000000000000", nil)
+	assert.Equal(t, http.StatusInternalServerError, resp.Code)
 }
 
 func TestController_Delete(t *testing.T) {
-	resp := performRequest(t, router, "DELETE", routerGroupName+"/component/886e09000000000000000000", nil)
+	//Failure
+	resp := performRequest(t, router, "DELETE", failureRouterGroupName+"/component/886e09000000000000000000", nil)
+
+	assert.Equal(t, http.StatusInternalServerError, resp.Code)
+
+	resp = performRequest(t, router, "DELETE", routerGroupName+"/component/886e09000000000000000000", nil)
 
 	assert.Equal(t, http.StatusNoContent, resp.Code)
 
@@ -129,4 +153,9 @@ func TestController_List(t *testing.T) {
 	err := json.Unmarshal([]byte(resp.Body.String()), &data)
 	assert.Nil(t, err)
 	assert.NotNil(t, data)
+
+	//Failure
+	resp = performRequest(t, router, "GET", failureRouterGroupName+"/components", nil)
+
+	assert.Equal(t, http.StatusInternalServerError, resp.Code)
 }

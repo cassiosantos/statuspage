@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/involvestecnologia/statuspage/client"
+	"github.com/involvestecnologia/statuspage/component"
 	"github.com/involvestecnologia/statuspage/mock"
 	"github.com/involvestecnologia/statuspage/models"
 
@@ -16,12 +17,16 @@ import (
 )
 
 const routerGroupName = "/test"
+const failureRouterGroupName = "/failure"
 
 var router = gin.Default()
 var clientMockDAO = mock.NewMockClientDAO()
+var failureClientDAO = mock.NewMockFailureClientDAO()
+var compSvc = component.NewService(mock.NewMockComponentDAO())
 
 func init() {
-	client.ClientRouter(clientMockDAO, router.Group(routerGroupName))
+	client.ClientRouter(clientMockDAO, compSvc, router.Group(routerGroupName))
+	client.ClientRouter(failureClientDAO, compSvc, router.Group(failureRouterGroupName))
 }
 
 func performRequest(t *testing.T, r http.Handler, method, path string, body []byte) *httptest.ResponseRecorder {
@@ -37,7 +42,7 @@ func performRequest(t *testing.T, r http.Handler, method, path string, body []by
 
 func TestController_Create(t *testing.T) {
 	//Valid: new client body
-	body := []byte(`{"name": "test","resources": []}`)
+	body := []byte(`{"name": "test","resource_refs": []}`)
 	resp := performRequest(t, router, "POST", routerGroupName+"/client", body)
 
 	assert.Equal(t, http.StatusCreated, resp.Code)
@@ -48,42 +53,65 @@ func TestController_Create(t *testing.T) {
 	assert.NotNil(t, data)
 
 	//Invalid: client body with exitent name
-	body = []byte(`{"name": "First Client","resources": []}`)
+	body = []byte(`{"name": "First Client","resource_refs": []}`)
 	resp = performRequest(t, router, "POST", routerGroupName+"/client", body)
 
 	assert.Equal(t, http.StatusBadRequest, resp.Code)
 
 	//Invalid: client missing required parameter name
-	body = []byte(`{"resources": []}`)
+	body = []byte(`{"resource_refs": []}`)
 	resp = performRequest(t, router, "POST", routerGroupName+"/client", body)
 
 	assert.Equal(t, http.StatusBadRequest, resp.Code)
 
 	//Invalid: client body with exitent ref
-	body = []byte(`{"ref":"886e09000000000000000000","name": "test2","resources": []}`)
+	body = []byte(`{"ref":"886e09000000000000000000","name": "test2","resource_refs": []}`)
 	resp = performRequest(t, router, "POST", routerGroupName+"/client", body)
 
 	assert.Equal(t, http.StatusBadRequest, resp.Code)
+
+	//Invalid: client body with invalid component ref
+	body = []byte(`{"ref":"test3","name": "test3","resource_refs": ["Invalid Ref","Another invalid Ref"]}`)
+	resp = performRequest(t, router, "POST", routerGroupName+"/client", body)
+
+	assert.Equal(t, http.StatusBadRequest, resp.Code)
+
+	//Failure DAO
+	body = []byte(`{"name": "test","resource_refs": []}`)
+	resp = performRequest(t, router, "POST", failureRouterGroupName+"/client", body)
+
+	assert.Equal(t, http.StatusInternalServerError, resp.Code)
 }
 
 func TestController_Update(t *testing.T) {
 	//Valid: client with exitent ref
-	body := []byte(`{"name": "test1","resources": []}`)
+	body := []byte(`{"name": "test1","resource_refs": []}`)
 	resp := performRequest(t, router, "PATCH", routerGroupName+"/client/886e09000000000000000000", body)
 
 	assert.Equal(t, http.StatusOK, resp.Code)
 
 	//Invalid: inexistent client ref
-	body = []byte(`{"name": "test2","resources": []}`)
+	body = []byte(`{"name": "test2","resource_refs": []}`)
 	resp = performRequest(t, router, "PATCH", routerGroupName+"/client/test2", body)
 
 	assert.Equal(t, http.StatusNotFound, resp.Code)
 
 	//Invalid: missing name parameter
-	body = []byte(`{"resources": []}`)
+	body = []byte(`{"resource_refs": []}`)
 	resp = performRequest(t, router, "PATCH", routerGroupName+"/client/886e09000000000000000000", body)
 
 	assert.Equal(t, http.StatusBadRequest, resp.Code)
+
+	//Valid: client with invalid component ref
+	body = []byte(`{"name": "test1","resource_refs": ["Invalid Ref"]}`)
+	resp = performRequest(t, router, "PATCH", routerGroupName+"/client/886e09000000000000000000", body)
+
+	assert.Equal(t, http.StatusBadRequest, resp.Code)
+
+	//Failure
+	body = []byte(`{"name": "test1","resource_refs": []}`)
+	resp = performRequest(t, router, "PATCH", failureRouterGroupName+"/client/886e09000000000000000000", body)
+	assert.Equal(t, http.StatusInternalServerError, resp.Code)
 }
 
 func TestController_Find(t *testing.T) {
@@ -108,10 +136,19 @@ func TestController_Find(t *testing.T) {
 	err = json.Unmarshal([]byte(resp.Body.String()), &data)
 	assert.Nil(t, err)
 	assert.NotNil(t, data)
+
+	//Failure
+	resp = performRequest(t, router, "GET", failureRouterGroupName+"/client/886e09000000000000000000", nil)
+	assert.Equal(t, http.StatusInternalServerError, resp.Code)
 }
 
 func TestController_Delete(t *testing.T) {
-	resp := performRequest(t, router, "DELETE", routerGroupName+"/client/886e09000000000000000000", nil)
+	//Failure
+	resp := performRequest(t, router, "DELETE", failureRouterGroupName+"/client/886e09000000000000000000", nil)
+
+	assert.Equal(t, http.StatusInternalServerError, resp.Code)
+
+	resp = performRequest(t, router, "DELETE", routerGroupName+"/client/886e09000000000000000000", nil)
 
 	assert.Equal(t, http.StatusNoContent, resp.Code)
 
@@ -129,4 +166,8 @@ func TestController_List(t *testing.T) {
 	err := json.Unmarshal([]byte(resp.Body.String()), &data)
 	assert.Nil(t, err)
 	assert.NotNil(t, data)
+
+	resp = performRequest(t, router, "GET", failureRouterGroupName+"/clients", nil)
+
+	assert.Equal(t, http.StatusInternalServerError, resp.Code)
 }

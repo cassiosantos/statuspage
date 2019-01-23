@@ -19,13 +19,16 @@ import (
 )
 
 const routerGroupName = "/test"
+const failureRouterGroupName = "/failure"
 
 var router = gin.Default()
 var incidentMockDAO = mock.NewMockIncidentDAO()
 var componentMockDAO = mock.NewMockComponentDAO()
+var incidentFailureMockDAO = mock.NewMockFailureIncidentDAO()
 
 func init() {
 	incident.IncidentRouter(incidentMockDAO, component.NewService(componentMockDAO), router.Group(routerGroupName))
+	incident.IncidentRouter(incidentFailureMockDAO, component.NewService(componentMockDAO), router.Group(failureRouterGroupName))
 }
 
 func performRequest(t *testing.T, r http.Handler, method, path string, body []byte) *httptest.ResponseRecorder {
@@ -74,6 +77,12 @@ func TestController_Create(t *testing.T) {
 	resp = performRequest(t, router, "POST", routerGroupName+"/incident", body)
 
 	assert.Equal(t, http.StatusNotFound, resp.Code)
+
+	//Failure
+	body = []byte(`{"component_ref":"` + mock.ZeroTimeHex + `","status": 1,"description": "test", "occurrence_date": "` + time.Now().Format(time.RFC3339) + `"}`)
+	resp = performRequest(t, router, "POST", failureRouterGroupName+"/incident", body)
+
+	assert.Equal(t, http.StatusInternalServerError, resp.Code)
 }
 func TestController_Find(t *testing.T) {
 	//Valid: incident with exitent ref
@@ -89,6 +98,10 @@ func TestController_Find(t *testing.T) {
 	resp = performRequest(t, router, "GET", routerGroupName+"/incident/test2", nil)
 
 	assert.Equal(t, http.StatusNotFound, resp.Code)
+
+	//Failure
+	resp = performRequest(t, router, "GET", failureRouterGroupName+"/incident/"+mock.ZeroTimeHex, nil)
+	assert.Equal(t, http.StatusInternalServerError, resp.Code)
 
 }
 
@@ -139,4 +152,9 @@ func TestController_List(t *testing.T) {
 	resp = performRequest(t, router, "GET", routerGroupName+"/incidents?month=0", nil)
 
 	assert.Equal(t, http.StatusBadRequest, resp.Code)
+
+	// Failure
+	resp = performRequest(t, router, "GET", failureRouterGroupName+"/incidents", nil)
+
+	assert.Equal(t, http.StatusInternalServerError, resp.Code)
 }

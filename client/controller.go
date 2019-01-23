@@ -29,6 +29,10 @@ func (ctrl *ClientController) Create(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
+		if err.Error() == errors.ErrInvalidRef {
+			c.JSON(http.StatusBadRequest, err.Error())
+			return
+		}
 		c.JSON(http.StatusInternalServerError, "")
 		return
 	}
@@ -46,6 +50,10 @@ func (ctrl *ClientController) Update(c *gin.Context) {
 	if err != nil {
 		if err.Error() == errors.ErrNotFound {
 			c.JSON(http.StatusNotFound, "")
+			return
+		}
+		if err.Error() == errors.ErrInvalidRef {
+			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
 		c.JSON(http.StatusInternalServerError, "")

@@ -14,6 +14,7 @@ import (
 const validMongoArgs = "localhost"
 
 var testSession *mgo.Session
+var failureSession *mgo.Session
 var c = models.Client{
 	Name:      "Test Client",
 	Ref:       "",
@@ -44,6 +45,11 @@ func TestClientMongoDB_Repository_Insert(t *testing.T) {
 	if assert.Nil(t, err) && assert.NotNil(t, c2) {
 		assert.Equal(t, c, c2)
 	}
+
+	repo = client.NewMongoRepository(failureSession)
+	_, err = repo.Insert(c)
+	assert.NotNil(t, err)
+
 }
 
 func TestClientMongoDB_Repository_Update(t *testing.T) {
@@ -60,6 +66,10 @@ func TestClientMongoDB_Repository_Update(t *testing.T) {
 	}
 
 	err = repo.Update("Invalid Ref Client", c)
+	assert.NotNil(t, err)
+
+	repo = client.NewMongoRepository(failureSession)
+	err = repo.Update(c.Ref, c)
 	assert.NotNil(t, err)
 
 }
@@ -81,6 +91,10 @@ func TestClientMongoDB_Repository_Find(t *testing.T) {
 
 	_, err = repo.Find(map[string]interface{}{"name": "test"})
 	assert.NotNil(t, err)
+
+	repo = client.NewMongoRepository(failureSession)
+	_, err = repo.Find(map[string]interface{}{"ref": c.Ref})
+	assert.NotNil(t, err)
 }
 
 func TestClientMongoDB_Repository_Delete(t *testing.T) {
@@ -101,6 +115,10 @@ func TestClientMongoDB_Repository_Delete(t *testing.T) {
 
 	err = repo.Delete(c.Name)
 	assert.NotNil(t, err)
+
+	repo = client.NewMongoRepository(failureSession)
+	err = repo.Delete(c.Ref)
+	assert.NotNil(t, err)
 }
 
 func TestClientMongoDB_Repository_List(t *testing.T) {
@@ -120,4 +138,8 @@ func TestClientMongoDB_Repository_List(t *testing.T) {
 		assert.IsType(t, list, clients)
 		assert.Equal(t, list, clients)
 	}
+
+	repo = client.NewMongoRepository(failureSession)
+	_, err = repo.List()
+	assert.NotNil(t, err)
 }

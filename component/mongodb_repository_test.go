@@ -14,6 +14,7 @@ import (
 const validMongoArgs = "localhost"
 
 var testSession *mgo.Session
+var failureSession *mgo.Session
 var c = models.Component{
 	Ref:     "",
 	Name:    "Test Component",
@@ -44,6 +45,10 @@ func TestComponentMongoDB_Repository_Insert(t *testing.T) {
 	if assert.Nil(t, err) && assert.NotNil(t, c2) {
 		assert.Equal(t, c, c2)
 	}
+
+	repo = component.NewMongoRepository(failureSession)
+	_, err = repo.Insert(c)
+	assert.NotNil(t, err)
 }
 
 func TestComponentMongoDB_Repository_Update(t *testing.T) {
@@ -60,6 +65,10 @@ func TestComponentMongoDB_Repository_Update(t *testing.T) {
 	}
 
 	err = repo.Update("Invalid Ref Component", c)
+	assert.NotNil(t, err)
+
+	repo = component.NewMongoRepository(failureSession)
+	err = repo.Update(c.Ref, c)
 	assert.NotNil(t, err)
 }
 
@@ -80,10 +89,19 @@ func TestComponentMongoDB_Repository_Find(t *testing.T) {
 
 	_, err = repo.Find(map[string]interface{}{"name": "test"})
 	assert.NotNil(t, err)
+
+	repo = component.NewMongoRepository(failureSession)
+	_, err = repo.Find(map[string]interface{}{"ref": c.Ref})
+	assert.NotNil(t, err)
 }
 
 func TestComponentMongoDB_Repository_Delete(t *testing.T) {
-	repo := component.NewMongoRepository(testSession)
+
+	repo := component.NewMongoRepository(failureSession)
+	err := repo.Delete(c.Ref)
+	assert.NotNil(t, err)
+
+	repo = component.NewMongoRepository(testSession)
 	c2, err := repo.Find(map[string]interface{}{"ref": c.Ref})
 	if assert.Nil(t, err) && assert.NotNil(t, c2) {
 		assert.Equal(t, c, c2)
@@ -119,4 +137,8 @@ func TestComponentMongoDB_Repository_List(t *testing.T) {
 		assert.IsType(t, list, components)
 		assert.Equal(t, list, components)
 	}
+
+	repo = component.NewMongoRepository(failureSession)
+	_, err = repo.List()
+	assert.NotNil(t, err)
 }
