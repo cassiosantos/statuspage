@@ -9,15 +9,15 @@ import (
 
 const databaseName = "status"
 
-type MongoRepository struct {
+type mongoRepository struct {
 	db *mgo.Session
 }
 
-func NewMongoRepository(session *mgo.Session) *MongoRepository {
-	return &MongoRepository{db: session}
+func NewMongoRepository(session *mgo.Session) Repository {
+	return &mongoRepository{db: session}
 }
 
-func (r *MongoRepository) Insert(client models.Client) (ref string, err error) {
+func (r *mongoRepository) Insert(client models.Client) (ref string, err error) {
 	defer mongoFailure(&err)
 	if client.Ref == "" {
 		client.Ref = bson.NewObjectId().Hex()
@@ -26,7 +26,7 @@ func (r *MongoRepository) Insert(client models.Client) (ref string, err error) {
 	return client.Ref, err
 }
 
-func (r *MongoRepository) Update(clientID string, client models.Client) (err error) {
+func (r *mongoRepository) Update(clientID string, client models.Client) (err error) {
 	defer mongoFailure(&err)
 
 	clientQ := bson.M{"ref": clientID}
@@ -41,7 +41,7 @@ func (r *MongoRepository) Update(clientID string, client models.Client) (err err
 	return err
 }
 
-func (r *MongoRepository) Find(q map[string]interface{}) (client models.Client, err error) {
+func (r *mongoRepository) Find(q map[string]interface{}) (client models.Client, err error) {
 	defer mongoFailure(&err)
 	err = r.db.DB(databaseName).C("Client").Find(q).One(&client)
 	if err == mgo.ErrNotFound {
@@ -50,7 +50,7 @@ func (r *MongoRepository) Find(q map[string]interface{}) (client models.Client, 
 	return client, err
 }
 
-func (r *MongoRepository) Delete(clientID string) (err error) {
+func (r *mongoRepository) Delete(clientID string) (err error) {
 	defer mongoFailure(&err)
 	clientQ := bson.M{"ref": clientID}
 	err = r.db.DB(databaseName).C("Client").Remove(clientQ)
@@ -60,7 +60,7 @@ func (r *MongoRepository) Delete(clientID string) (err error) {
 	return err
 }
 
-func (r *MongoRepository) List() (clients []models.Client, err error) {
+func (r *mongoRepository) List() (clients []models.Client, err error) {
 	defer mongoFailure(&err)
 	err = r.db.DB(databaseName).C("Client").Find(nil).All(&clients)
 	return clients, err

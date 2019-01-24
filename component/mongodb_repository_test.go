@@ -30,9 +30,8 @@ func init() {
 }
 
 func TestComponentMongoDB_Repository_NewMongoRepository(t *testing.T) {
-	var mongoRepo *component.MongoRepository
 	repo := component.NewMongoRepository(testSession)
-	assert.IsType(t, mongoRepo, repo)
+	assert.Implements(t, (*component.Repository)(nil), repo)
 }
 
 func TestComponentMongoDB_Repository_Insert(t *testing.T) {

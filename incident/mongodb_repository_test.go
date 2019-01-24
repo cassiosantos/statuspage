@@ -39,9 +39,8 @@ func init() {
 }
 
 func TestIncidentMongoDB_Repository_NewMongoRepository(t *testing.T) {
-	var mongoRepo *incident.MongoRepository
 	repo := incident.NewMongoRepository(testSession)
-	assert.IsType(t, mongoRepo, repo)
+	assert.Implements(t, (*incident.Repository)(nil), repo)
 }
 
 func TestIncidentMongoDB_Repository_Insert(t *testing.T) {

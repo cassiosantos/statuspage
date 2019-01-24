@@ -11,21 +11,21 @@ import (
 
 const databaseName = "status"
 
-type MongoRepository struct {
+type mongoRepository struct {
 	db *mgo.Session
 }
 
-func NewMongoRepository(session *mgo.Session) *MongoRepository {
-	return &MongoRepository{db: session}
+func NewMongoRepository(session *mgo.Session) Repository {
+	return &mongoRepository{db: session}
 }
 
-func (r *MongoRepository) Insert(incident models.Incident) (err error) {
+func (r *mongoRepository) Insert(incident models.Incident) (err error) {
 	defer mongoFailure(&err)
 	err = r.db.DB(databaseName).C("Incidents").Insert(incident)
 	return err
 }
 
-func (r *MongoRepository) Find(queryParam map[string]interface{}) (incidents []models.Incident, err error) {
+func (r *mongoRepository) Find(queryParam map[string]interface{}) (incidents []models.Incident, err error) {
 	defer mongoFailure(&err)
 	err = r.db.DB(databaseName).C("Incidents").Find(queryParam).All(&incidents)
 	if incidents == nil {
@@ -34,7 +34,7 @@ func (r *MongoRepository) Find(queryParam map[string]interface{}) (incidents []m
 	return incidents, err
 }
 
-func (r *MongoRepository) List(startDt time.Time, endDt time.Time) (incidents []models.Incident, err error) {
+func (r *mongoRepository) List(startDt time.Time, endDt time.Time) (incidents []models.Incident, err error) {
 	defer mongoFailure(&err)
 	findQ := bson.M{
 		"date": bson.M{

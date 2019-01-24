@@ -9,19 +9,19 @@ import (
 	"github.com/involvestecnologia/statuspage/models"
 )
 
-type ClientService struct {
+type clientService struct {
 	repo      Repository
 	component component.Service
 }
 
-func NewService(r Repository, component component.Service) *ClientService {
-	return &ClientService{
+func NewService(r Repository, component component.Service) Service {
+	return &clientService{
 		repo:      r,
 		component: component,
 	}
 }
 
-func (s *ClientService) CreateClient(client models.Client) (string, error) {
+func (s *clientService) CreateClient(client models.Client) (string, error) {
 	if s.clientAlreadyExists(map[string]interface{}{"name": client.Name}) {
 		return client.Name, errors.E(fmt.Sprintf(errors.ErrAlreadyExists, client.Name))
 	}
@@ -39,7 +39,7 @@ func (s *ClientService) CreateClient(client models.Client) (string, error) {
 	return s.repo.Insert(client)
 }
 
-func (s *ClientService) UpdateClient(clientRef string, client models.Client) error {
+func (s *clientService) UpdateClient(clientRef string, client models.Client) error {
 	for _, compRef := range client.Resources {
 		if _, exists := s.component.ComponentExists(map[string]interface{}{"ref": compRef}); !exists {
 			return errors.E(errors.ErrInvalidRef)
@@ -48,22 +48,22 @@ func (s *ClientService) UpdateClient(clientRef string, client models.Client) err
 	return s.repo.Update(clientRef, client)
 }
 
-func (s *ClientService) FindClient(queryParam map[string]interface{}) (models.Client, error) {
+func (s *clientService) FindClient(queryParam map[string]interface{}) (models.Client, error) {
 	if len(queryParam) == 0 {
 		return models.Client{}, errors.E(errors.ErrInvalidQuery)
 	}
 	return s.repo.Find(queryParam)
 }
 
-func (s *ClientService) RemoveClient(clientID string) error {
+func (s *clientService) RemoveClient(clientID string) error {
 	return s.repo.Delete(clientID)
 }
 
-func (s *ClientService) ListClients() ([]models.Client, error) {
+func (s *clientService) ListClients() ([]models.Client, error) {
 	return s.repo.List()
 }
 
-func (s *ClientService) clientAlreadyExists(clientFields map[string]interface{}) bool {
+func (s *clientService) clientAlreadyExists(clientFields map[string]interface{}) bool {
 	_, err := s.FindClient(clientFields)
 	return err == nil
 }

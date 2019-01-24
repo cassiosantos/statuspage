@@ -30,9 +30,8 @@ func init() {
 }
 
 func TestClientMongoDB_Repository_NewMongoRepository(t *testing.T) {
-	var mongoRepo *client.MongoRepository
 	repo := client.NewMongoRepository(testSession)
-	assert.IsType(t, mongoRepo, repo)
+	assert.Implements(t, (*client.Repository)(nil), repo)
 }
 
 func TestClientMongoDB_Repository_Insert(t *testing.T) {

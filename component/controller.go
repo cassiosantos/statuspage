@@ -20,7 +20,7 @@ func NewComponentController(service Service) *ComponentController {
 func (ctrl *ComponentController) Create(c *gin.Context) {
 	var newComponent models.Component
 	if err := c.ShouldBindJSON(&newComponent); err != nil {
-		c.JSON(http.StatusBadRequest, "Missing required parameter")
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
@@ -28,34 +28,34 @@ func (ctrl *ComponentController) Create(c *gin.Context) {
 	if err != nil {
 		switch err.Error() {
 		case fmt.Sprintf(errors.ErrAlreadyExists, ref):
-			c.JSON(http.StatusBadRequest, err.Error())
+			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		default:
-			c.JSON(http.StatusInternalServerError, "")
+			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
 	}
-	c.JSON(http.StatusCreated, "")
+	c.JSON(http.StatusCreated, ref)
 }
 
 func (ctrl *ComponentController) Update(c *gin.Context) {
 	id := c.Param("id")
 	var newComponent models.Component
 	if err := c.ShouldBindJSON(&newComponent); err != nil {
-		c.JSON(http.StatusBadRequest, "Missing required parameter")
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	err := ctrl.service.UpdateComponent(id, newComponent)
 	if err != nil {
 		switch err.Error() {
 		case errors.ErrNotFound:
-			c.JSON(http.StatusNotFound, "")
+			c.AbortWithError(http.StatusNotFound, err)
 			return
 		case fmt.Sprintf(errors.ErrAlreadyExists, newComponent.Name):
-			c.JSON(http.StatusBadRequest, err.Error())
+			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		default:
-			c.JSON(http.StatusInternalServerError, "")
+			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
 	}
@@ -68,10 +68,10 @@ func (ctrl *ComponentController) Find(c *gin.Context) {
 	component, err := ctrl.service.FindComponent(map[string]interface{}{queryBy: id})
 	if err != nil {
 		if err.Error() == errors.ErrNotFound {
-			c.JSON(http.StatusNotFound, "")
+			c.AbortWithError(http.StatusNotFound, err)
 			return
 		}
-		c.JSON(http.StatusInternalServerError, "")
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 	c.JSON(http.StatusOK, component)
@@ -80,7 +80,7 @@ func (ctrl *ComponentController) Find(c *gin.Context) {
 func (ctrl *ComponentController) List(c *gin.Context) {
 	components, err := ctrl.service.ListComponents()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, "")
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 	c.JSON(http.StatusOK, components)
@@ -91,10 +91,10 @@ func (ctrl *ComponentController) Delete(c *gin.Context) {
 	err := ctrl.service.RemoveComponent(id)
 	if err != nil {
 		if err.Error() == errors.ErrNotFound {
-			c.JSON(http.StatusNotFound, "")
+			c.AbortWithError(http.StatusNotFound, err)
 			return
 		}
-		c.JSON(http.StatusInternalServerError, "")
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 	c.JSON(http.StatusNoContent, "")

@@ -9,18 +9,18 @@ import (
 	"github.com/involvestecnologia/statuspage/models"
 )
 
-type IncidentService struct {
+type incidentService struct {
 	component component.Service
 	repo      Repository
 }
 
-func NewService(r Repository, component component.Service) *IncidentService {
-	return &IncidentService{
+func NewService(r Repository, component component.Service) Service {
+	return &incidentService{
 		component: component,
 		repo:      r}
 }
 
-func (s *IncidentService) CreateIncidents(incident models.Incident) error {
+func (s *incidentService) CreateIncidents(incident models.Incident) error {
 	_, err := s.component.FindComponent(map[string]interface{}{"ref": incident.ComponentRef})
 	if err != nil {
 		return err
@@ -28,11 +28,11 @@ func (s *IncidentService) CreateIncidents(incident models.Incident) error {
 	return s.repo.Insert(incident)
 }
 
-func (s *IncidentService) FindIncidents(query map[string]interface{}) ([]models.Incident, error) {
+func (s *incidentService) FindIncidents(query map[string]interface{}) ([]models.Incident, error) {
 	return s.repo.Find(query)
 }
 
-func (s *IncidentService) ListIncidents(year string, month string) ([]models.Incident, error) {
+func (s *incidentService) ListIncidents(year string, month string) ([]models.Incident, error) {
 	var iComp []models.Incident
 	var start, end time.Time
 	if year == "" && month == "" {
@@ -65,7 +65,7 @@ func (s *IncidentService) ListIncidents(year string, month string) ([]models.Inc
 	return s.repo.List(start, end)
 }
 
-func (s *IncidentService) ValidateMonth(month string) (int, error) {
+func (s *incidentService) ValidateMonth(month string) (int, error) {
 	m, err := strconv.Atoi(month)
 	if err != nil {
 		return -1, err
@@ -77,7 +77,7 @@ func (s *IncidentService) ValidateMonth(month string) (int, error) {
 	return m, nil
 }
 
-func (s *IncidentService) ValidateYear(year string) (int, error) {
+func (s *incidentService) ValidateYear(year string) (int, error) {
 	y, err := strconv.Atoi(year)
 	if err != nil {
 		return -1, err
