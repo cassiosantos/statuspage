@@ -12,14 +12,14 @@ type prometheusService struct {
 	component component.Service
 }
 
-func NewPrometheusService(incident incident.Service, component component.Service) *prometheusService {
+func NewPrometheusService(incident incident.Service, component component.Service) Service {
 	return &prometheusService{incident: incident, component: component}
 }
 
 func (svc *prometheusService) ProcessIncomingWebhook(incoming models.PrometheusIncomingWebhook) error {
 	for _, alerts := range incoming.Alerts {
 		if ref, err := svc.component.CreateComponent(alerts.Component); err != nil {
-			if v := ! svc.isValidErr(err); v {
+			if svc.shouldFail(err) {
 				return err
 			}
 			alerts.Incident.ComponentRef = ref
@@ -31,15 +31,15 @@ func (svc *prometheusService) ProcessIncomingWebhook(incoming models.PrometheusI
 	return nil
 }
 
-func (svc *prometheusService) isValidErr(err error) bool {
+func (svc *prometheusService) shouldFail(err error) bool {
 	switch err.Error() {
 	case errors.ErrComponentNameIsEmpty:
 		return true
 	case errors.ErrComponentNameAlreadyExists:
-		return true
+		return false
 	case errors.ErrComponentRefAlreadyExists:
-		return true
-	default :
+		return false
+	default:
 		return false
 	}
 }
