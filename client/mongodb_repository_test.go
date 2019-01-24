@@ -1,10 +1,11 @@
-package client
+package client_test
 
 import (
 	"log"
 	"testing"
 
 	mgo "github.com/globalsign/mgo"
+	"github.com/involvestecnologia/statuspage/client"
 	"github.com/involvestecnologia/statuspage/db"
 	"github.com/involvestecnologia/statuspage/models"
 	"github.com/stretchr/testify/assert"
@@ -13,6 +14,7 @@ import (
 const validMongoArgs = "localhost"
 
 var testSession *mgo.Session
+var failureSession *mgo.Session
 var c = models.Client{
 	Name:      "Test Client",
 	Ref:       "",
@@ -28,15 +30,13 @@ func init() {
 }
 
 func TestClientMongoDB_Repository_NewMongoRepository(t *testing.T) {
-	var mongoRepo *MongoRepository
-	repo := NewMongoRepository(testSession)
-	assert.IsType(t, mongoRepo, repo)
-	assert.Equal(t, testSession, repo.db)
+	repo := client.NewMongoRepository(testSession)
+	assert.Implements(t, (*client.Repository)(nil), repo)
 }
 
 func TestClientMongoDB_Repository_Insert(t *testing.T) {
 
-	repo := NewMongoRepository(testSession)
+	repo := client.NewMongoRepository(testSession)
 	ref, err := repo.Insert(c)
 	c.Ref = ref
 	assert.Nil(t, err)
@@ -44,10 +44,15 @@ func TestClientMongoDB_Repository_Insert(t *testing.T) {
 	if assert.Nil(t, err) && assert.NotNil(t, c2) {
 		assert.Equal(t, c, c2)
 	}
+
+	repo = client.NewMongoRepository(failureSession)
+	_, err = repo.Insert(c)
+	assert.NotNil(t, err)
+
 }
 
 func TestClientMongoDB_Repository_Update(t *testing.T) {
-	repo := NewMongoRepository(testSession)
+	repo := client.NewMongoRepository(testSession)
 
 	c.Name = "Updated Test Client"
 
@@ -62,10 +67,14 @@ func TestClientMongoDB_Repository_Update(t *testing.T) {
 	err = repo.Update("Invalid Ref Client", c)
 	assert.NotNil(t, err)
 
+	repo = client.NewMongoRepository(failureSession)
+	err = repo.Update(c.Ref, c)
+	assert.NotNil(t, err)
+
 }
 
 func TestClientMongoDB_Repository_Find(t *testing.T) {
-	repo := NewMongoRepository(testSession)
+	repo := client.NewMongoRepository(testSession)
 	c2, err := repo.Find(map[string]interface{}{"ref": c.Ref})
 	if assert.Nil(t, err) && assert.NotNil(t, c2) {
 		assert.Equal(t, c, c2)
@@ -81,10 +90,14 @@ func TestClientMongoDB_Repository_Find(t *testing.T) {
 
 	_, err = repo.Find(map[string]interface{}{"name": "test"})
 	assert.NotNil(t, err)
+
+	repo = client.NewMongoRepository(failureSession)
+	_, err = repo.Find(map[string]interface{}{"ref": c.Ref})
+	assert.NotNil(t, err)
 }
 
 func TestClientMongoDB_Repository_Delete(t *testing.T) {
-	repo := NewMongoRepository(testSession)
+	repo := client.NewMongoRepository(testSession)
 	c2, err := repo.Find(map[string]interface{}{"ref": c.Ref})
 	if assert.Nil(t, err) && assert.NotNil(t, c2) {
 		assert.Equal(t, c, c2)
@@ -101,10 +114,14 @@ func TestClientMongoDB_Repository_Delete(t *testing.T) {
 
 	err = repo.Delete(c.Name)
 	assert.NotNil(t, err)
+
+	repo = client.NewMongoRepository(failureSession)
+	err = repo.Delete(c.Ref)
+	assert.NotNil(t, err)
 }
 
 func TestClientMongoDB_Repository_List(t *testing.T) {
-	repo := NewMongoRepository(testSession)
+	repo := client.NewMongoRepository(testSession)
 
 	clients, err := repo.List()
 	assert.Nil(t, clients)
@@ -120,4 +137,8 @@ func TestClientMongoDB_Repository_List(t *testing.T) {
 		assert.IsType(t, list, clients)
 		assert.Equal(t, list, clients)
 	}
+
+	repo = client.NewMongoRepository(failureSession)
+	_, err = repo.List()
+	assert.NotNil(t, err)
 }

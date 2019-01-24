@@ -4,15 +4,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func IncidentRouter(incidentRepo Repository, router *gin.RouterGroup) {
+func IncidentRouter(incidentService Service, router *gin.RouterGroup) {
 
-	incidentService := NewService(incidentRepo)
 	incidentController := NewIncidentController(incidentService)
 
 	incidentRouter := router.Group("/incident")
 	{
-		incidentRouter.POST("/:componentName", incidentController.Create)
-		incidentRouter.GET("/:componentName", incidentController.Find)
+		incidentRouter.POST("", incidentController.Create)
+		incidentRouter.GET("/:componentRef", incidentController.Find)
 	}
 
 	incidentsRouter := router.Group("/incidents")

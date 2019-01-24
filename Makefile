@@ -4,7 +4,7 @@ dep-vendor:
 test-all: dep-vendor
 	docker-compose down
 	docker-compose up -d mongo
-	for i in `find ./* -maxdepth 1 -type d -not -path "./vendor*"`; do go test $$i -coverprofile /dev/null ; done
+	for i in `find ./* -maxdepth 1 -type d -not -path "./vendor*" -not -path "./docs*"`; do go test $$i -coverprofile /dev/null ; done
 	docker-compose down
 
 run: 

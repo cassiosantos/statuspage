@@ -1,31 +1,27 @@
-package component
+package component_test
 
 import (
 	"testing"
 	"time"
 
 	"github.com/globalsign/mgo/bson"
-	"github.com/involvestecnologia/statuspage/errors"
 
+	"github.com/involvestecnologia/statuspage/component"
+	"github.com/involvestecnologia/statuspage/mock"
 	"github.com/involvestecnologia/statuspage/models"
 
 	"github.com/stretchr/testify/assert"
 )
 
-const (
-	zeroTimeHex   = "886e09000000000000000000"
-	oneSecTimeHex = "886e09010000000000000000"
-)
-
 func TestNewComponentService(t *testing.T) {
-	dao := newMockComponentDAO()
-	s := NewService(dao)
-	assert.Equal(t, dao, s.repo)
+	dao := mock.NewMockComponentDAO()
+	s := component.NewService(dao)
+	assert.Implements(t, (*component.Service)(nil), s)
 
 }
 
 func TestComponentService_ListComponents(t *testing.T) {
-	s := NewService(newMockComponentDAO())
+	s := component.NewService(mock.NewMockComponentDAO())
 
 	c, err := s.ListComponents()
 	if assert.Nil(t, err) && assert.NotNil(t, c) {
@@ -36,9 +32,9 @@ func TestComponentService_ListComponents(t *testing.T) {
 	}
 }
 func TestComponentService_FindComponent(t *testing.T) {
-	s := NewService(newMockComponentDAO())
+	s := component.NewService(mock.NewMockComponentDAO())
 
-	c, err := s.FindComponent(map[string]interface{}{"ref": zeroTimeHex})
+	c, err := s.FindComponent(map[string]interface{}{"ref": mock.ZeroTimeHex})
 	if assert.Nil(t, err) && assert.NotNil(t, c) {
 		if assert.IsType(t, models.Component{}, c) {
 			assert.Equal(t, "first", c.Name)
@@ -52,10 +48,10 @@ func TestComponentService_FindComponent(t *testing.T) {
 		}
 	}
 
-	_, err = s.FindComponent(map[string]interface{}{"ref": oneSecTimeHex})
+	_, err = s.FindComponent(map[string]interface{}{"ref": mock.OneSecTimeHex})
 	assert.NotNil(t, err)
 
-	_, err = s.FindComponent(map[string]interface{}{"name": oneSecTimeHex})
+	_, err = s.FindComponent(map[string]interface{}{"name": mock.OneSecTimeHex})
 	assert.NotNil(t, err)
 
 	_, err = s.FindComponent(map[string]interface{}{"ref": "test"})
@@ -72,13 +68,12 @@ func TestComponentService_FindComponent(t *testing.T) {
 
 }
 func TestComponentService_CreateComponent(t *testing.T) {
-	s := NewService(newMockComponentDAO())
+	s := component.NewService(mock.NewMockComponentDAO())
 
 	c := models.Component{
-		Ref:       bson.NewObjectIdWithTime(bson.Now().Add(5 * time.Second)).Hex(),
-		Name:      "New Component",
-		Address:   "no-address",
-		Incidents: make([]models.Incident, 0),
+		Ref:     bson.NewObjectIdWithTime(bson.Now().Add(5 * time.Second)).Hex(),
+		Name:    "New Component",
+		Address: "no-address",
 	}
 
 	ref, err := s.CreateComponent(c)
@@ -92,146 +87,61 @@ func TestComponentService_CreateComponent(t *testing.T) {
 		}
 	}
 
-	c.Ref = zeroTimeHex
+	c.Ref = mock.ZeroTimeHex
+	_, err = s.CreateComponent(c)
+	assert.NotNil(t, err)
+
+	c.Ref = ""
+	c.Name = ""
 	_, err = s.CreateComponent(c)
 	assert.NotNil(t, err)
 
 }
 func TestComponentService_UpdateComponent(t *testing.T) {
-	s := NewService(newMockComponentDAO())
+	s := component.NewService(mock.NewMockComponentDAO())
 
 	currTime := bson.Now().String()
-	c, err := s.FindComponent(map[string]interface{}{"ref": zeroTimeHex})
+	c, err := s.FindComponent(map[string]interface{}{"ref": mock.ZeroTimeHex})
 	if assert.Nil(t, err) && assert.NotNil(t, c) {
 		c.Address = currTime
 	}
-	err = s.UpdateComponent(zeroTimeHex, c)
+	err = s.UpdateComponent(mock.ZeroTimeHex, c)
 	assert.Nil(t, err)
 
-	comp, err := s.FindComponent(map[string]interface{}{"ref": zeroTimeHex})
+	comp, err := s.FindComponent(map[string]interface{}{"ref": mock.ZeroTimeHex})
 	if assert.Nil(t, err) && assert.NotNil(t, comp) {
 		assert.Equal(t, c, comp)
 	}
 
-	err = s.UpdateComponent(oneSecTimeHex, c)
+	err = s.UpdateComponent(mock.OneSecTimeHex, c)
+	assert.NotNil(t, err)
+
+	c.Name = ""
+	err = s.UpdateComponent(mock.OneSecTimeHex, c)
 	assert.NotNil(t, err)
 
 }
 func TestComponentService_RemoveComponent(t *testing.T) {
-	s := NewService(newMockComponentDAO())
+	s := component.NewService(mock.NewMockComponentDAO())
 
-	err := s.RemoveComponent(zeroTimeHex)
+	err := s.RemoveComponent(mock.ZeroTimeHex)
 	assert.Nil(t, err)
 
-	_, err = s.FindComponent(map[string]interface{}{"ref": zeroTimeHex})
+	_, err = s.FindComponent(map[string]interface{}{"ref": mock.ZeroTimeHex})
 	assert.NotNil(t, err)
 }
 func TestComponentService_componentExists(t *testing.T) {
-	s := NewService(newMockComponentDAO())
+	s := component.NewService(mock.NewMockComponentDAO())
 
-	c, err := s.FindComponent(map[string]interface{}{"ref": zeroTimeHex})
+	c, err := s.FindComponent(map[string]interface{}{"ref": mock.ZeroTimeHex})
 	if assert.Nil(t, err) && assert.NotNil(t, c) {
 		if assert.IsType(t, models.Component{}, c) {
 			assert.Equal(t, "first", c.Name)
 		}
 	}
-	_, exists := s.componentExists(map[string]interface{}{"name": c.Name})
+	_, exists := s.ComponentExists(map[string]interface{}{"name": c.Name})
 	assert.True(t, exists)
 
-	_, exists = s.componentExists(map[string]interface{}{"name": bson.NewObjectIdWithTime(bson.Now()).String()})
+	_, exists = s.ComponentExists(map[string]interface{}{"name": bson.NewObjectIdWithTime(bson.Now()).String()})
 	assert.False(t, exists)
-}
-
-type mockComponentDAO struct {
-	components []models.Component
-}
-
-func newMockComponentDAO() Repository {
-	return &mockComponentDAO{
-		components: []models.Component{
-			models.Component{
-				Ref:       zeroTimeHex,
-				Name:      "first",
-				Address:   "",
-				Incidents: make([]models.Incident, 0),
-			},
-			models.Component{
-				Ref:       bson.NewObjectIdWithTime(bson.Now()).Hex(),
-				Name:      "first_comp_with_group",
-				Address:   "",
-				Incidents: make([]models.Incident, 0),
-			},
-			models.Component{
-				Ref:       bson.NewObjectIdWithTime(bson.Now()).Hex(),
-				Name:      "test",
-				Address:   "",
-				Incidents: make([]models.Incident, 0),
-			},
-			models.Component{
-				Ref:       bson.NewObjectIdWithTime(bson.Now()).Hex(),
-				Name:      "last_comp_with_group",
-				Address:   "",
-				Incidents: make([]models.Incident, 0),
-			},
-			models.Component{
-				Ref:       bson.NewObjectIdWithTime(bson.Now()).Hex(),
-				Name:      "last",
-				Address:   "",
-				Incidents: make([]models.Incident, 0),
-			},
-		},
-	}
-}
-
-func (m *mockComponentDAO) List() ([]models.Component, error) {
-	return m.components, nil
-}
-func (m *mockComponentDAO) Find(q map[string]interface{}) (models.Component, error) {
-	var c models.Component
-	if keyValue, hasKey := q["ref"]; hasKey {
-		for _, c := range m.components {
-			if c.Ref == keyValue {
-				return c, nil
-			}
-		}
-	} else {
-		if keyValue, hasKey := q["name"]; hasKey {
-			for _, c := range m.components {
-				if c.Name == keyValue {
-					return c, nil
-				}
-			}
-		} else {
-			return c, errors.E(errors.ErrInvalidQuery)
-		}
-	}
-
-	return c, errors.E(errors.ErrNotFound)
-}
-func (m *mockComponentDAO) Insert(component models.Component) (string, error) {
-	if component.Ref == "" {
-		component.Ref = bson.NewObjectId().Hex()
-	}
-	m.components = append(m.components, component)
-	return component.Ref, nil
-}
-func (m *mockComponentDAO) Update(ref string, component models.Component) error {
-	for k, comp := range m.components {
-		if comp.Ref == ref {
-			m.components[k].Name = component.Name
-			m.components[k].Address = component.Address
-			m.components[k].Incidents = component.Incidents
-			return nil
-		}
-	}
-	return errors.E(errors.ErrNotFound)
-}
-func (m *mockComponentDAO) Delete(ref string) error {
-	for k, comp := range m.components {
-		if comp.Ref == ref {
-			m.components = append(m.components[:k], m.components[k+1:]...)
-			return nil
-		}
-	}
-	return errors.E(errors.ErrNotFound)
 }

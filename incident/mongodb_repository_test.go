@@ -1,13 +1,14 @@
-package incident
+package incident_test
 
 import (
-	"fmt"
 	"log"
 	"testing"
 	"time"
 
 	mgo "github.com/globalsign/mgo"
 	"github.com/involvestecnologia/statuspage/db"
+	"github.com/involvestecnologia/statuspage/incident"
+	"github.com/involvestecnologia/statuspage/mock"
 	"github.com/involvestecnologia/statuspage/models"
 	"github.com/stretchr/testify/assert"
 )
@@ -15,22 +16,17 @@ import (
 const validMongoArgs = "localhost"
 
 var testSession *mgo.Session
+var failureSession *mgo.Session
 var i = models.Incident{
-	Status:      models.IncidentStatusOutage,
-	Description: "",
-	Date:        time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC),
+	ComponentRef: mock.ZeroTimeHex,
+	Status:       models.IncidentStatusOutage,
+	Description:  "",
+	Date:         time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC),
 }
 var c = models.Component{
-	Ref:     zeroTimeHex,
+	Ref:     mock.ZeroTimeHex,
 	Name:    "Component",
 	Address: "",
-	Incidents: []models.Incident{
-		models.Incident{
-			Status:      models.IncidentStatusOK,
-			Description: "",
-			Date:        time.Date(2018, time.January, 1, 0, 0, 0, 0, time.UTC),
-		},
-	},
 }
 
 func init() {
@@ -40,76 +36,72 @@ func init() {
 		log.Panicf("%s\n", err)
 	}
 	testSession.DB("status").C("Component").Insert(c)
-	fmt.Println("First insert done.")
 }
 
 func TestIncidentMongoDB_Repository_NewMongoRepository(t *testing.T) {
-	var mongoRepo *MongoRepository
-	repo := NewMongoRepository(testSession)
-	assert.IsType(t, mongoRepo, repo)
-	assert.Equal(t, testSession, repo.db)
+	repo := incident.NewMongoRepository(testSession)
+	assert.Implements(t, (*incident.Repository)(nil), repo)
 }
 
 func TestIncidentMongoDB_Repository_Insert(t *testing.T) {
 
-	repo := NewMongoRepository(testSession)
+	repo := incident.NewMongoRepository(testSession)
 
-	err := repo.Insert(c.Name, i)
+	err := repo.Insert(i)
 	assert.Nil(t, err)
 
-	c.Incidents = append(c.Incidents, i)
-
-	incidents, err := repo.Find(c.Name)
+	incidents, err := repo.Find(map[string]interface{}{"component_ref": i.ComponentRef})
 	if assert.Nil(t, err) && assert.NotNil(t, incidents) {
-		assert.Equal(t, c.Incidents, incidents)
+		assert.Equal(t, []models.Incident{i}, incidents)
 	}
 
-	err = repo.Insert("Invalid Ref", i)
+	repo = incident.NewMongoRepository(failureSession)
+
+	err = repo.Insert(i)
 	assert.NotNil(t, err)
+
 }
 
 func TestIncidentMongoDB_Repository_Find(t *testing.T) {
-	repo := NewMongoRepository(testSession)
+	repo := incident.NewMongoRepository(testSession)
 
-	incidents, err := repo.Find(c.Name)
+	incidents, err := repo.Find(map[string]interface{}{"component_ref": c.Ref})
 	if assert.Nil(t, err) && assert.NotNil(t, incidents) {
-		assert.Equal(t, c.Incidents, incidents)
+		assert.Equal(t, []models.Incident{i}, incidents)
 	}
 
-	_, err = repo.Find("Invalid Name")
+	incidents, err = repo.Find(map[string]interface{}{"component_ref": "Invalid Ref"})
+	assert.Nil(t, incidents)
+
+	incidents, err = repo.Find(map[string]interface{}{"invalidQuery": "SomeValue"})
 	assert.NotNil(t, err)
+	assert.Nil(t, incidents)
+
+	repo = incident.NewMongoRepository(failureSession)
+	_, err = repo.Find(map[string]interface{}{"component_ref": c.Ref})
+	assert.NotNil(t, err)
+
 }
 
 func TestIncidentMongoDB_Repository_List(t *testing.T) {
-	repo := NewMongoRepository(testSession)
+	repo := incident.NewMongoRepository(testSession)
 
 	startDt := time.Date(2018, time.January, 1, 0, 0, 0, 0, time.UTC)
 	endDt := time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC)
 
-	incCompName := make([]models.IncidentWithComponentName, 0)
-	for _, v := range c.Incidents {
-		incCompName = append(incCompName,
-			models.IncidentWithComponentName{
-				Component: c.Name,
-				Incident:  v,
-			})
-	}
-
 	incidents, err := repo.List(startDt, endDt)
 	if assert.Nil(t, err) && assert.NotNil(t, incidents) {
-		assert.Equal(t, incCompName, incidents)
-	}
-
-	firstIncCompName := []models.IncidentWithComponentName{
-		models.IncidentWithComponentName{
-			Component: c.Name,
-			Incident:  c.Incidents[0],
-		},
+		assert.Equal(t, []models.Incident{i}, incidents)
 	}
 
 	endDt = time.Date(2018, time.January, 2, 0, 0, 0, 0, time.UTC)
 	incidents, err = repo.List(startDt, endDt)
-	if assert.Nil(t, err) && assert.NotNil(t, incidents) {
-		assert.Equal(t, firstIncCompName, incidents)
+	if assert.Nil(t, err) && assert.Nil(t, incidents) {
+		assert.IsType(t, []models.Incident{}, incidents)
 	}
+
+	endDt = time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC)
+	repo = incident.NewMongoRepository(failureSession)
+	_, err = repo.List(startDt, endDt)
+	assert.NotNil(t, err)
 }

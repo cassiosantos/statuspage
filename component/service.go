@@ -1,56 +1,83 @@
 package component
 
 import (
-	"fmt"
-
 	"github.com/involvestecnologia/statuspage/errors"
 	"github.com/involvestecnologia/statuspage/models"
 )
 
-type ComponentService struct {
+type componentService struct {
 	repo Repository
 }
 
-func NewService(r Repository) *ComponentService {
-	return &ComponentService{repo: r}
+func NewService(r Repository) Service {
+	return &componentService{repo: r}
 }
 
-func (s *ComponentService) componentExists(componentFields map[string]interface{}) (models.Component, bool) {
-	c, err := s.repo.Find(componentFields)
-	return c, err == nil
-}
+func (s *componentService) CreateComponent(component models.Component) (string, error) {
+	if valid, err := s.isValidComponent(component); !valid {
+		return component.Ref, err
+	}
 
-func (s *ComponentService) CreateComponent(component models.Component) (string, error) {
-	if _, exist := s.componentExists(map[string]interface{}{"name": component.Name}); exist {
-		return component.Name, errors.E(fmt.Sprintf(errors.ErrAlreadyExists, component.Name))
+	if inUse, err := s.isComponentNameInUse(component); inUse {
+		return component.Ref, err
 	}
-	if component.Ref != "" {
-		if _, exist := s.componentExists(map[string]interface{}{"ref": component.Ref}); exist {
-			return component.Ref, errors.E(fmt.Sprintf(errors.ErrAlreadyExists, component.Ref))
-		}
+
+	if inUse, err := s.isComponentRefInUse(component); inUse {
+		return component.Ref, err
 	}
+
 	return s.repo.Insert(component)
 }
 
-func (s *ComponentService) UpdateComponent(ref string, component models.Component) error {
-	c, exist := s.componentExists(map[string]interface{}{"name": component.Name})
-	if exist && c.Ref != ref {
-		return errors.E(fmt.Sprintf(errors.ErrAlreadyExists, component.Name))
+func (s *componentService) UpdateComponent(ref string, component models.Component) error {
+	component.Ref = ref
+	if valid, err := s.isValidComponent(component); !valid {
+		return err
+	}
+
+	if inUse, err := s.isComponentNameInUse(component); inUse {
+		return err
 	}
 	return s.repo.Update(ref, component)
 }
 
-func (s *ComponentService) FindComponent(queryParam map[string]interface{}) (models.Component, error) {
+func (s *componentService) FindComponent(queryParam map[string]interface{}) (models.Component, error) {
 	if len(queryParam) == 0 {
 		return models.Component{}, errors.E(errors.ErrInvalidQuery)
 	}
 	return s.repo.Find(queryParam)
 }
 
-func (s *ComponentService) ListComponents() ([]models.Component, error) {
+func (s *componentService) ListComponents() ([]models.Component, error) {
 	return s.repo.List()
 }
 
-func (s *ComponentService) RemoveComponent(id string) error {
+func (s *componentService) RemoveComponent(id string) error {
 	return s.repo.Delete(id)
+}
+
+func (s *componentService) ComponentExists(componentFields map[string]interface{}) (models.Component, bool) {
+	c, err := s.repo.Find(componentFields)
+	return c, err == nil
+}
+
+func (s *componentService) isValidComponent(c models.Component) (bool, error) {
+	if c.Name == "" {
+		return false, errors.E(errors.ErrComponentNameIsEmpty)
+	}
+	return true, nil
+}
+
+func (s *componentService) isComponentNameInUse(c models.Component) (bool, error) {
+	if comp, exist := s.ComponentExists(map[string]interface{}{"name": c.Name}); exist && comp.Ref != c.Ref {
+		return true, errors.E(errors.ErrComponentNameAlreadyExists)
+	}
+	return false, nil
+}
+
+func (s *componentService) isComponentRefInUse(c models.Component) (bool, error) {
+	if _, exist := s.ComponentExists(map[string]interface{}{"ref": c.Ref}); exist {
+		return true, errors.E(errors.ErrComponentRefAlreadyExists)
+	}
+	return false, nil
 }

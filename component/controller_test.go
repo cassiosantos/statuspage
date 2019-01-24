@@ -1,4 +1,4 @@
-package component
+package component_test
 
 import (
 	"bytes"
@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/involvestecnologia/statuspage/component"
+	"github.com/involvestecnologia/statuspage/mock"
 	"github.com/involvestecnologia/statuspage/models"
 
 	"github.com/gin-gonic/gin"
@@ -14,12 +16,15 @@ import (
 )
 
 const routerGroupName = "/test"
+const failureRouterGroupName = "/failure"
 
 var router = gin.Default()
-var componentMockDAO = newMockComponentDAO()
 
 func init() {
-	ComponentRouter(componentMockDAO, router.Group(routerGroupName))
+	componentService := component.NewService(mock.NewMockComponentDAO())
+	componentFailureService := component.NewService(mock.NewMockFailureComponentDAO())
+	component.ComponentRouter(componentService, router.Group(routerGroupName))
+	component.ComponentRouter(componentFailureService, router.Group(failureRouterGroupName))
 }
 
 func performRequest(t *testing.T, r http.Handler, method, path string, body []byte) *httptest.ResponseRecorder {
@@ -62,6 +67,12 @@ func TestController_Create(t *testing.T) {
 	resp = performRequest(t, router, "POST", routerGroupName+"/component", body)
 
 	assert.Equal(t, http.StatusBadRequest, resp.Code)
+
+	//Failure
+	body = []byte(`{"name": "new component","address": "t.e.s.t", "incidents_history": []}`)
+	resp = performRequest(t, router, "POST", failureRouterGroupName+"/component", body)
+
+	assert.Equal(t, http.StatusInternalServerError, resp.Code)
 }
 
 func TestController_Update(t *testing.T) {
@@ -70,6 +81,18 @@ func TestController_Update(t *testing.T) {
 	resp := performRequest(t, router, "PATCH", routerGroupName+"/component/886e09000000000000000000", body)
 
 	assert.Equal(t, http.StatusOK, resp.Code)
+
+	//Invalid: component name already exists
+	body = []byte(`{"name": "last","resources": []}`)
+	resp = performRequest(t, router, "PATCH", routerGroupName+"/component/886e09000000000000000000", body)
+
+	assert.Equal(t, http.StatusBadRequest, resp.Code)
+
+	//Invalid: component name is empty
+	body = []byte(`{"name": "","resources": []}`)
+	resp = performRequest(t, router, "PATCH", routerGroupName+"/component/886e09000000000000000000", body)
+
+	assert.Equal(t, http.StatusBadRequest, resp.Code)
 
 	//Invalid: inexistent component ref
 	body = []byte(`{"name": "test2","resources": []}`)
@@ -82,6 +105,12 @@ func TestController_Update(t *testing.T) {
 	resp = performRequest(t, router, "PATCH", routerGroupName+"/component/886e09000000000000000000", body)
 
 	assert.Equal(t, http.StatusBadRequest, resp.Code)
+
+	//Failure
+	body = []byte(`{"name": "test1","resources": []}`)
+	resp = performRequest(t, router, "PATCH", failureRouterGroupName+"/component/886e09000000000000000000", body)
+
+	assert.Equal(t, http.StatusInternalServerError, resp.Code)
 }
 
 func TestController_Find(t *testing.T) {
@@ -106,10 +135,19 @@ func TestController_Find(t *testing.T) {
 	err = json.Unmarshal([]byte(resp.Body.String()), &data)
 	assert.Nil(t, err)
 	assert.NotNil(t, data)
+
+	//Failure
+	resp = performRequest(t, router, "GET", failureRouterGroupName+"/component/886e09000000000000000000", nil)
+	assert.Equal(t, http.StatusInternalServerError, resp.Code)
 }
 
 func TestController_Delete(t *testing.T) {
-	resp := performRequest(t, router, "DELETE", routerGroupName+"/component/886e09000000000000000000", nil)
+	//Failure
+	resp := performRequest(t, router, "DELETE", failureRouterGroupName+"/component/886e09000000000000000000", nil)
+
+	assert.Equal(t, http.StatusInternalServerError, resp.Code)
+
+	resp = performRequest(t, router, "DELETE", routerGroupName+"/component/886e09000000000000000000", nil)
 
 	assert.Equal(t, http.StatusNoContent, resp.Code)
 
@@ -127,4 +165,9 @@ func TestController_List(t *testing.T) {
 	err := json.Unmarshal([]byte(resp.Body.String()), &data)
 	assert.Nil(t, err)
 	assert.NotNil(t, data)
+
+	//Failure
+	resp = performRequest(t, router, "GET", failureRouterGroupName+"/components", nil)
+
+	assert.Equal(t, http.StatusInternalServerError, resp.Code)
 }

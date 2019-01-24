@@ -20,35 +20,47 @@ func NewClientController(service Service) *ClientController {
 func (ctrl *ClientController) Create(c *gin.Context) {
 	var newClient models.Client
 	if err := c.ShouldBindJSON(&newClient); err != nil {
-		c.JSON(http.StatusBadRequest, "missing required parameter")
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	ref, err := ctrl.service.CreateClient(newClient)
 	if err != nil {
-		if err.Error() == fmt.Sprintf(errors.ErrAlreadyExists, ref) {
-			c.JSON(http.StatusBadRequest, err.Error())
+		switch err.Error() {
+		case errors.ErrClientNameAlreadyExists:
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		case errors.ErrClientRefAlreadyExists:
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		case errors.ErrInvalidRef:
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		default:
+			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
-		c.JSON(http.StatusInternalServerError, "")
-		return
 	}
-	c.JSON(http.StatusCreated, "")
+	c.JSON(http.StatusCreated, ref)
 }
 
 func (ctrl *ClientController) Update(c *gin.Context) {
 	var client models.Client
 	if err := c.ShouldBindJSON(&client); err != nil {
-		c.JSON(http.StatusBadRequest, "missing required parameter")
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	clientRef := c.Param("clientRef")
 	err := ctrl.service.UpdateClient(clientRef, client)
 	if err != nil {
 		if err.Error() == errors.ErrNotFound {
-			c.JSON(http.StatusNotFound, "")
+			c.AbortWithError(http.StatusNotFound, err)
 			return
 		}
-		c.JSON(http.StatusInternalServerError, "")
+		if err.Error() == errors.ErrInvalidRef {
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 	c.JSON(http.StatusOK, "")
@@ -61,10 +73,10 @@ func (ctrl *ClientController) Find(c *gin.Context) {
 	client, err := ctrl.service.FindClient(map[string]interface{}{queryBy: qValue})
 	if err != nil {
 		if err.Error() == errors.ErrNotFound {
-			c.JSON(http.StatusNotFound, "")
+			c.AbortWithError(http.StatusNotFound, err)
 			return
 		}
-		c.JSON(http.StatusInternalServerError, "")
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 	c.JSON(http.StatusOK, client)
@@ -75,10 +87,10 @@ func (ctrl *ClientController) Delete(c *gin.Context) {
 	err := ctrl.service.RemoveClient(clientID)
 	if err != nil {
 		if err.Error() == errors.ErrNotFound {
-			c.JSON(http.StatusNotFound, "")
+			c.AbortWithError(http.StatusNotFound, err)
 			return
 		}
-		c.JSON(http.StatusInternalServerError, "")
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 	c.JSON(http.StatusNoContent, "")
@@ -87,7 +99,7 @@ func (ctrl *ClientController) Delete(c *gin.Context) {
 func (ctrl *ClientController) List(c *gin.Context) {
 	clients, err := ctrl.service.ListClients()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, "")
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 	c.JSON(http.StatusOK, clients)

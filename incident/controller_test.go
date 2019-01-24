@@ -1,4 +1,4 @@
-package incident
+package incident_test
 
 import (
 	"bytes"
@@ -8,6 +8,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/involvestecnologia/statuspage/component"
+	"github.com/involvestecnologia/statuspage/incident"
+	"github.com/involvestecnologia/statuspage/mock"
+
 	"github.com/involvestecnologia/statuspage/models"
 
 	"github.com/gin-gonic/gin"
@@ -15,12 +19,16 @@ import (
 )
 
 const routerGroupName = "/test"
+const failureRouterGroupName = "/failure"
 
 var router = gin.Default()
-var incidentMockDAO = newMockIncidentDAO()
+var componentService = component.NewService(mock.NewMockComponentDAO())
 
 func init() {
-	IncidentRouter(incidentMockDAO, router.Group(routerGroupName))
+	incidentService := incident.NewService(mock.NewMockIncidentDAO(), componentService)
+	incidentFailureService := incident.NewService(mock.NewMockFailureIncidentDAO(), componentService)
+	incident.IncidentRouter(incidentService, router.Group(routerGroupName))
+	incident.IncidentRouter(incidentFailureService, router.Group(failureRouterGroupName))
 }
 
 func performRequest(t *testing.T, r http.Handler, method, path string, body []byte) *httptest.ResponseRecorder {
@@ -36,8 +44,8 @@ func performRequest(t *testing.T, r http.Handler, method, path string, body []by
 
 func TestController_Create(t *testing.T) {
 	//Valid: new incident body
-	body := []byte(`{"status": 1,"description": "test", "occurrence_date": "` + time.Now().Format(time.RFC3339) + `"}`)
-	resp := performRequest(t, router, "POST", routerGroupName+"/incident/last", body)
+	body := []byte(`{"component_ref":"` + mock.ZeroTimeHex + `","status": 1,"description": "test", "occurrence_date": "` + time.Now().Format(time.RFC3339) + `"}`)
+	resp := performRequest(t, router, "POST", routerGroupName+"/incident", body)
 
 	assert.Equal(t, http.StatusCreated, resp.Code)
 
@@ -47,27 +55,38 @@ func TestController_Create(t *testing.T) {
 	assert.NotNil(t, data)
 
 	//Invalid: incident body missing required parameter status
-	body = []byte(`{"description": "test", "occurrence_date": "` + time.Now().Format(time.RFC3339) + `"}`)
-	resp = performRequest(t, router, "POST", routerGroupName+"/incident/last", body)
+	body = []byte(`{"component_ref":"` + mock.ZeroTimeHex + `","description": "test", "occurrence_date": "` + time.Now().Format(time.RFC3339) + `"}`)
+	resp = performRequest(t, router, "POST", routerGroupName+"/incident", body)
 
 	assert.Equal(t, http.StatusBadRequest, resp.Code)
 
 	//Invalid: incident missing required parameter occurrence_date
-	body = []byte(`{"status":0, "description": "test"}`)
-	resp = performRequest(t, router, "POST", routerGroupName+"/incident/last", body)
+	body = []byte(`{"component_ref":"` + mock.ZeroTimeHex + `","status":0, "description": "test"}`)
+	resp = performRequest(t, router, "POST", routerGroupName+"/incident", body)
+
+	assert.Equal(t, http.StatusBadRequest, resp.Code)
+
+	//Invalid: incident missing required parameter component_ref
+	body = []byte(`{"status":0, "description": "test", "occurrence_date": "` + time.Now().Format(time.RFC3339) + `"}`)
+	resp = performRequest(t, router, "POST", routerGroupName+"/incident", body)
 
 	assert.Equal(t, http.StatusBadRequest, resp.Code)
 
 	//Invalid: unknow component
-	body = []byte(`{"status": 1,"description": "test", "occurrence_date": "` + time.Now().Format(time.RFC3339) + `"}`)
-	resp = performRequest(t, router, "POST", routerGroupName+"/incident/invalid_component_ref", body)
+	body = []byte(`{"component_ref":"Invalid Component Ref","status": 1,"description": "test", "occurrence_date": "` + time.Now().Format(time.RFC3339) + `"}`)
+	resp = performRequest(t, router, "POST", routerGroupName+"/incident", body)
 
 	assert.Equal(t, http.StatusNotFound, resp.Code)
-}
 
+	//Failure
+	body = []byte(`{"component_ref":"` + mock.ZeroTimeHex + `","status": 1,"description": "test", "occurrence_date": "` + time.Now().Format(time.RFC3339) + `"}`)
+	resp = performRequest(t, router, "POST", failureRouterGroupName+"/incident", body)
+
+	assert.Equal(t, http.StatusInternalServerError, resp.Code)
+}
 func TestController_Find(t *testing.T) {
 	//Valid: incident with exitent ref
-	resp := performRequest(t, router, "GET", routerGroupName+"/incident/last", nil)
+	resp := performRequest(t, router, "GET", routerGroupName+"/incident/"+mock.ZeroTimeHex, nil)
 	assert.Equal(t, http.StatusOK, resp.Code)
 
 	var data []models.Incident
@@ -79,6 +98,10 @@ func TestController_Find(t *testing.T) {
 	resp = performRequest(t, router, "GET", routerGroupName+"/incident/test2", nil)
 
 	assert.Equal(t, http.StatusNotFound, resp.Code)
+
+	//Failure
+	resp = performRequest(t, router, "GET", failureRouterGroupName+"/incident/"+mock.ZeroTimeHex, nil)
+	assert.Equal(t, http.StatusInternalServerError, resp.Code)
 
 }
 
@@ -129,4 +152,9 @@ func TestController_List(t *testing.T) {
 	resp = performRequest(t, router, "GET", routerGroupName+"/incidents?month=0", nil)
 
 	assert.Equal(t, http.StatusBadRequest, resp.Code)
+
+	// Failure
+	resp = performRequest(t, router, "GET", failureRouterGroupName+"/incidents", nil)
+
+	assert.Equal(t, http.StatusInternalServerError, resp.Code)
 }
