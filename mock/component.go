@@ -16,27 +16,27 @@ type MockComponentDAO struct {
 func NewMockComponentDAO() component.Repository {
 	return &MockComponentDAO{
 		components: []models.Component{
-			models.Component{
+			{
 				Ref:     ZeroTimeHex,
 				Name:    "first",
 				Address: "",
 			},
-			models.Component{
+			{
 				Ref:     bson.NewObjectIdWithTime(bson.Now()).Hex(),
 				Name:    "first_comp_with_group",
 				Address: "",
 			},
-			models.Component{
+			{
 				Ref:     bson.NewObjectIdWithTime(bson.Now()).Hex(),
 				Name:    "test",
 				Address: "",
 			},
-			models.Component{
+			{
 				Ref:     bson.NewObjectIdWithTime(bson.Now()).Hex(),
 				Name:    "last_comp_with_group",
 				Address: "",
 			},
-			models.Component{
+			{
 				Ref:     bson.NewObjectIdWithTime(bson.Now()).Hex(),
 				Name:    "last",
 				Address: "",
