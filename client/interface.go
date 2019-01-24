@@ -15,7 +15,7 @@ type Write interface {
 	Update(clientRef string, client models.Client) error
 }
 
-// Repository describes the repository where the data will be writen and read from
+// Repository describes the repository where the data will be written and read from
 type Repository interface {
 	Read
 	Write

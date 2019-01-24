@@ -1,7 +1,6 @@
 package incident_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -90,7 +89,6 @@ func TestIncidentService_CreateIncident(t *testing.T) {
 
 	inc, err := s.FindIncidents(map[string]interface{}{"component_ref": mock.ZeroTimeHex})
 	if assert.Nil(t, err) && assert.NotNil(t, i) {
-		fmt.Printf("%v", inc)
 		assert.Equal(t, i, inc[len(inc)-1])
 	}
 

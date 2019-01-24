@@ -17,7 +17,7 @@ type Write interface {
 	Update(componentRef string, component models.Component) error
 }
 
-// Repository describes the repository where the data will be writen and read from
+// Repository describes the repository where the data will be written and read from
 type Repository interface {
 	Read
 	Write
