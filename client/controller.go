@@ -25,16 +25,20 @@ func (ctrl *ClientController) Create(c *gin.Context) {
 	}
 	ref, err := ctrl.service.CreateClient(newClient)
 	if err != nil {
-		if err.Error() == fmt.Sprintf(errors.ErrAlreadyExists, ref) {
+		switch err.Error() {
+		case errors.ErrClientNameAlreadyExists:
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
-		}
-		if err.Error() == errors.ErrInvalidRef {
+		case errors.ErrClientRefAlreadyExists:
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
+		case errors.ErrInvalidRef:
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		default:
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
 		}
-		c.AbortWithError(http.StatusInternalServerError, err)
-		return
 	}
 	c.JSON(http.StatusCreated, ref)
 }

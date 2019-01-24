@@ -1,7 +1,6 @@
 package component
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -27,7 +26,10 @@ func (ctrl *ComponentController) Create(c *gin.Context) {
 	ref, err := ctrl.service.CreateComponent(newComponent)
 	if err != nil {
 		switch err.Error() {
-		case fmt.Sprintf(errors.ErrAlreadyExists, ref):
+		case errors.ErrComponentNameAlreadyExists:
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		case errors.ErrComponentRefAlreadyExists:
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		default:
@@ -51,7 +53,7 @@ func (ctrl *ComponentController) Update(c *gin.Context) {
 		case errors.ErrNotFound:
 			c.AbortWithError(http.StatusNotFound, err)
 			return
-		case fmt.Sprintf(errors.ErrAlreadyExists, newComponent.Name):
+		case errors.ErrComponentNameAlreadyExists:
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		default:

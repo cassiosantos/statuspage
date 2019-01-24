@@ -1,8 +1,6 @@
 package client
 
 import (
-	"fmt"
-
 	"github.com/involvestecnologia/statuspage/component"
 
 	"github.com/involvestecnologia/statuspage/errors"
@@ -23,11 +21,11 @@ func NewService(r Repository, component component.Service) Service {
 
 func (s *clientService) CreateClient(client models.Client) (string, error) {
 	if s.clientAlreadyExists(map[string]interface{}{"name": client.Name}) {
-		return client.Name, errors.E(fmt.Sprintf(errors.ErrAlreadyExists, client.Name))
+		return client.Name, errors.E(errors.ErrClientNameAlreadyExists)
 	}
 	if client.Ref != "" {
 		if s.clientAlreadyExists(map[string]interface{}{"ref": client.Ref}) {
-			return client.Ref, errors.E(fmt.Sprintf(errors.ErrAlreadyExists, client.Ref))
+			return client.Ref, errors.E(errors.ErrClientRefAlreadyExists)
 		}
 	}
 	for _, compRef := range client.Resources {

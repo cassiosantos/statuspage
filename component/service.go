@@ -1,8 +1,6 @@
 package component
 
 import (
-	"fmt"
-
 	"github.com/involvestecnologia/statuspage/errors"
 	"github.com/involvestecnologia/statuspage/models"
 )
@@ -15,28 +13,31 @@ func NewService(r Repository) Service {
 	return &componentService{repo: r}
 }
 
-func (s *componentService) ComponentExists(componentFields map[string]interface{}) (models.Component, bool) {
-	c, err := s.repo.Find(componentFields)
-	return c, err == nil
-}
-
 func (s *componentService) CreateComponent(component models.Component) (string, error) {
-	if valid, err, failureRef := s.IsValidComponent(component); !valid {
-		return failureRef, err
+	if valid, err := s.isValidComponent(component); !valid {
+		return component.Ref, err
 	}
+
+	if inUse, err := s.isComponentNameInUse(component); inUse {
+		return component.Ref, err
+	}
+
+	if inUse, err := s.isComponentRefInUse(component); inUse {
+		return component.Ref, err
+	}
+
 	return s.repo.Insert(component)
 }
 
 func (s *componentService) UpdateComponent(ref string, component models.Component) error {
 	component.Ref = ref
-	if component.Name == "" {
-		return errors.E(errors.ErrComponentNameIsEmpty)
-	}
-	c, exist := s.ComponentExists(map[string]interface{}{"name": component.Name})
-	if exist && c.Ref != ref {
-		return errors.E(fmt.Sprintf(errors.ErrAlreadyExists, c.Name))
+	if valid, err := s.isValidComponent(component); !valid {
+		return err
 	}
 
+	if inUse, err := s.isComponentNameInUse(component); inUse {
+		return err
+	}
 	return s.repo.Update(ref, component)
 }
 
@@ -55,16 +56,28 @@ func (s *componentService) RemoveComponent(id string) error {
 	return s.repo.Delete(id)
 }
 
-func (s *componentService) IsValidComponent(c models.Component) (bool, error, string) {
+func (s *componentService) ComponentExists(componentFields map[string]interface{}) (models.Component, bool) {
+	c, err := s.repo.Find(componentFields)
+	return c, err == nil
+}
 
+func (s *componentService) isValidComponent(c models.Component) (bool, error) {
 	if c.Name == "" {
-		return false, errors.E(errors.ErrComponentNameIsEmpty), c.Name
+		return false, errors.E(errors.ErrComponentNameIsEmpty)
 	}
-	if _, exist := s.ComponentExists(map[string]interface{}{"name": c.Name}); exist {
-		return false, errors.E(fmt.Sprintf(errors.ErrAlreadyExists, c.Name)), c.Name
+	return true, nil
+}
+
+func (s *componentService) isComponentNameInUse(c models.Component) (bool, error) {
+	if comp, exist := s.ComponentExists(map[string]interface{}{"name": c.Name}); exist && comp.Ref != c.Ref {
+		return true, errors.E(errors.ErrComponentNameAlreadyExists)
 	}
+	return false, nil
+}
+
+func (s *componentService) isComponentRefInUse(c models.Component) (bool, error) {
 	if _, exist := s.ComponentExists(map[string]interface{}{"ref": c.Ref}); exist {
-		return false, errors.E(fmt.Sprintf(errors.ErrAlreadyExists, c.Ref)), c.Ref
+		return true, errors.E(errors.ErrComponentRefAlreadyExists)
 	}
-	return true, nil, ""
+	return false, nil
 }

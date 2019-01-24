@@ -9,11 +9,15 @@ import (
 func TestDB_Error(t *testing.T) {
 
 	errConsts := []string{
+		ErrAlreadyExists,
 		ErrInvalidRef,
 		ErrComponentNameIsEmpty,
 		ErrInvalidQuery,
 		ErrNotFound,
-		ErrAlreadyExists,
+		ErrComponentRefAlreadyExists,
+		ErrComponentNameAlreadyExists,
+		ErrClientRefAlreadyExists,
+		ErrClientNameAlreadyExists,
 		ErrInvalidMonth,
 		ErrInvalidYear,
 		ErrTriggerUnavailable,
