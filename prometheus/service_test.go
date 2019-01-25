@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func NewServicesMock(failure bool, m string) *prometheusService {
+func NewServicesMock(failure bool, m string) Service {
 	componentDAO := mock.NewMockComponentDAO()
 	componentFailureDAO := mock.NewMockFailureComponentDAO()
 	incidentDAO := mock.NewMockIncidentDAO()
