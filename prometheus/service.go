@@ -22,12 +22,12 @@ func (svc *prometheusService) ProcessIncomingWebhook(incoming models.PrometheusI
 			if svc.shouldFail(err) {
 				return err
 			}
-			alerts.Incident.ComponentRef = ref
+				alerts.Incident.ComponentRef = ref
+			}
+			if err := svc.incident.CreateIncidents(alerts.Incident); err != nil {
+				return err
+			}
 		}
-		if err := svc.incident.CreateIncidents(alerts.Incident); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 

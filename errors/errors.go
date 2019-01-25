@@ -13,7 +13,7 @@ const (
 	ErrInvalidMonth               = "Invalid month"
 	ErrInvalidYear                = "Invalid year"
 	ErrTriggerUnavailable         = "Unavailable Trigger"
-	ErrInvalidIncidentJSONDate    = "Field occurence_date not found"
+	ErrInvalidIncidentJSONDate    = "Field occurrence_date not found"
 	ErrMongoFailuere              = "Failed to perform operation on MongoDB"
 )
 

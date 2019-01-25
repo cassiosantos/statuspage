@@ -7,9 +7,9 @@ import (
 
 func PrometheusModel() map[string]models.PrometheusIncomingWebhook {
 	return map[string]models.PrometheusIncomingWebhook{
-		"ModelComplete": models.PrometheusIncomingWebhook{
+		"ModelComplete": {
 			Alerts: []models.PrometheusAlerts{
-				models.PrometheusAlerts{
+				{
 					Status: "RESOLVED",
 					Incident: models.Incident{
 						ComponentRef: "123123",
@@ -27,9 +27,9 @@ func PrometheusModel() map[string]models.PrometheusIncomingWebhook {
 				},
 			},
 		},
-		"ModelWithoutName": models.PrometheusIncomingWebhook{
+		"ModelWithoutName": {
 			Alerts: []models.PrometheusAlerts{
-				models.PrometheusAlerts{
+				{
 					Status: "RESOLVED",
 					Incident: models.Incident{
 						ComponentRef: ZeroTimeHex,
@@ -46,9 +46,9 @@ func PrometheusModel() map[string]models.PrometheusIncomingWebhook {
 				},
 			},
 		},
-		"ModelWithoutRef": models.PrometheusIncomingWebhook{
+		"ModelWithoutRef": {
 			Alerts: []models.PrometheusAlerts{
-				models.PrometheusAlerts{
+				{
 					Status: "RESOLVED",
 					Component: models.Component{
 						Name:    "newComponent",
@@ -60,9 +60,9 @@ func PrometheusModel() map[string]models.PrometheusIncomingWebhook {
 				},
 			},
 		},
-		"ModelWithoutComponent": models.PrometheusIncomingWebhook{
+		"ModelWithoutComponent": {
 			Alerts: []models.PrometheusAlerts{
-				models.PrometheusAlerts{
+				{
 					Status: "RESOLVED",
 					Incident: models.Incident{
 						ComponentRef: ZeroTimeHex,

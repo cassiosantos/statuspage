@@ -17,6 +17,6 @@ const (
 	IncidentStatusOK = 0
 	// IncidentStatusUnstable means "You received reports of a problem."
 	IncidentStatusUnstable = 1
-	// IncidentStatusOutage means "A severe problem happend"
+	// IncidentStatusOutage means "A severe problem happened"
 	IncidentStatusOutage = 2
 )
