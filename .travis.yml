@@ -1,10 +1,12 @@
 language: go
-sudo: false
 go:
-- tip
+  - 1.1.1
+env:
+  - "PATH=/home/travis/gopath/bin:$PATH"
 before_install:
-- go get github.com/mattn/goveralls
-- go get github.com/axw/gocov/gocov
+  - go get -v .
+  - go get github.com/mattn/goveralls
+  - go get github.com/axw/gocov/gocov
 script:
   - go test -v -covermode=count -coverprofile=coverage.out ./...
   - goveralls -coverprofile=coverage.out -service travis-ci -repotoken $COVERALLS_TOKEN
