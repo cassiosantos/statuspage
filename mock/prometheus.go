@@ -12,13 +12,13 @@ func PrometheusModel() map[string]models.PrometheusIncomingWebhook {
 				{
 					Status: "RESOLVED",
 					Incident: models.Incident{
-						ComponentRef: ZeroTimeHex,
+						ComponentRef: "123123",
 						Description:  "status ok",
 						Status:       0,
 					},
 					Component: models.Component{
-						Ref:     ZeroTimeHex,
-						Name:    "first",
+						Ref:     "123123",
+						Name:    "CompleteModel",
 						Address: "",
 					},
 					StartsAt:     time.Now(),
@@ -75,6 +75,36 @@ func PrometheusModel() map[string]models.PrometheusIncomingWebhook {
 				},
 			},
 		},
-		"ModelBlank": {},
+		"ModelComponentNameAlreadyExists": models.PrometheusIncomingWebhook{
+			Alerts: []models.PrometheusAlerts{
+				models.PrometheusAlerts{
+					Status: "RESOLVED",
+					Component:	models.Component{
+						Ref:     "ZeroTimeHex",
+						Name:    "first",
+						Address: "",
+					},
+					StartsAt:     time.Now(),
+					EndsAt:       time.Now(),
+					GeneratorURL: "ur.com",
+				},
+			},
+		},
+		"ModelComponentRefAlreadyExists": models.PrometheusIncomingWebhook{
+			Alerts: []models.PrometheusAlerts{
+				models.PrometheusAlerts{
+					Status: "RESOLVED",
+					Component:	models.Component{
+						Ref:     ZeroTimeHex,
+						Name:    "RefTest",
+						Address: "",
+					},
+					StartsAt:     time.Now(),
+					EndsAt:       time.Now(),
+					GeneratorURL: "ur.com",
+				},
+			},
+		},
+		"ModelBlank": models.PrometheusIncomingWebhook{},
 	}
 }
