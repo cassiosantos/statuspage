@@ -1,7 +1,6 @@
 package client
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -69,7 +68,6 @@ func (ctrl *ClientController) Update(c *gin.Context) {
 func (ctrl *ClientController) Find(c *gin.Context) {
 	queryBy := c.DefaultQuery("search", "ref")
 	qValue := c.Param("clientRef")
-	fmt.Printf("%s: %s\n", queryBy, qValue)
 	client, err := ctrl.service.FindClient(map[string]interface{}{queryBy: qValue})
 	if err != nil {
 		if err.Error() == errors.ErrNotFound {

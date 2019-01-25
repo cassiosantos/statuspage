@@ -16,7 +16,7 @@ type MockClientDAO struct {
 func NewMockClientDAO() client.Repository {
 	return &MockClientDAO{
 		clients: []models.Client{
-			models.Client{
+			{
 				Ref:  ZeroTimeHex,
 				Name: "First Client",
 				Resources: []string{
@@ -25,7 +25,7 @@ func NewMockClientDAO() client.Repository {
 					bson.NewObjectIdWithTime(bson.Now()).Hex(),
 				},
 			},
-			models.Client{
+			{
 				Ref:  OneSecTimeHex,
 				Name: "Last Client",
 				Resources: []string{

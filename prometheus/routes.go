@@ -7,7 +7,7 @@ import (
 )
 
 func PrometheusRouter(incident incident.Service, component component.Service, router *gin.RouterGroup) {
-	prometheusService := NewPrometheusService(incident,component)
+	prometheusService := NewPrometheusService(incident, component)
 	prometheusController := NewPrometheusController(prometheusService)
 	incidentRouter := router.Group("/prometheus")
 	{

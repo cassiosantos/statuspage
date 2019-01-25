@@ -16,12 +16,12 @@ type MockIncidentDAO struct {
 func NewMockIncidentDAO() incident.Repository {
 	return &MockIncidentDAO{
 		incidents: []models.Incident{
-			models.Incident{
+			{
 				ComponentRef: ZeroTimeHex,
 				Description:  "status ok",
 				Status:       0,
 			},
-			models.Incident{
+			{
 				ComponentRef: OneSecTimeHex,
 				Description:  "status outage",
 				Status:       2,

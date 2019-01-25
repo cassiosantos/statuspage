@@ -22,7 +22,7 @@ func (svc *prometheusService) ProcessIncomingWebhook(incoming models.PrometheusI
 			return errors.E(errors.ErrComponentNameIsEmpty)
 		}
 		component, exists := svc.component.ComponentExists(map[string]interface{}{"name": alerts.Component.Name})
-		if ! exists {
+		if !exists {
 			ref, err := svc.component.CreateComponent(alerts.Component)
 			if err != nil {
 				return err
