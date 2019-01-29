@@ -8,3 +8,6 @@ This is a generic Status Page. It's sole purpose it's to display the latest inci
  - Group component to represent a client resources
  - Prometheus incoming webhook
  - [WIP] Incoming/Outgoing Webhooks
+
+### Docs:
+ The API documentation is available in [statuspage-api-reference](https://involvestecnologia.github.io/statuspage-api-reference/#tag/components) [[view-source-code](https://github.com/involvestecnologia/statuspage-api-reference)].
