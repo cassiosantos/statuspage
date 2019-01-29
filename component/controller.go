@@ -41,7 +41,7 @@ func (ctrl *ComponentController) Create(c *gin.Context) {
 }
 
 func (ctrl *ComponentController) Update(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("ref")
 	var newComponent models.Component
 	if err := c.ShouldBindJSON(&newComponent); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
@@ -66,8 +66,8 @@ func (ctrl *ComponentController) Update(c *gin.Context) {
 
 func (ctrl *ComponentController) Find(c *gin.Context) {
 	queryBy := c.DefaultQuery("search", "ref")
-	id := c.Param("id")
-	component, err := ctrl.service.FindComponent(map[string]interface{}{queryBy: id})
+	ref := c.Param("ref")
+	component, err := ctrl.service.FindComponent(map[string]interface{}{queryBy: ref})
 	if err != nil {
 		if err.Error() == errors.ErrNotFound {
 			c.AbortWithError(http.StatusNotFound, err)
@@ -89,8 +89,8 @@ func (ctrl *ComponentController) List(c *gin.Context) {
 }
 
 func (ctrl *ComponentController) Delete(c *gin.Context) {
-	id := c.Param("id")
-	err := ctrl.service.RemoveComponent(id)
+	ref := c.Param("ref")
+	err := ctrl.service.RemoveComponent(ref)
 	if err != nil {
 		if err.Error() == errors.ErrNotFound {
 			c.AbortWithError(http.StatusNotFound, err)

@@ -11,9 +11,9 @@ func ComponentRouter(componentService Service, router *gin.RouterGroup) {
 	componentRouter := router.Group("/component")
 	{
 		componentRouter.POST("", componentController.Create)
-		componentRouter.PATCH("/:id", componentController.Update)
-		componentRouter.GET("/:id", componentController.Find)
-		componentRouter.DELETE("/:id", componentController.Delete)
+		componentRouter.PATCH("/:ref", componentController.Update)
+		componentRouter.GET("/:ref", componentController.Find)
+		componentRouter.DELETE("/:ref", componentController.Delete)
 	}
 
 	componentsRouter := router.Group("/components")
