@@ -166,6 +166,22 @@ func TestController_List(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, data)
 
+	body := []byte(`{"refs": ["` + data[0].Ref + `","` + data[1].Ref + `"]}`)
+
+	resp = performRequest(t, router, "GET", routerGroupName+"/components", body)
+
+	assert.Equal(t, http.StatusOK, resp.Code)
+
+	err = json.Unmarshal([]byte(resp.Body.String()), &data)
+	assert.Nil(t, err)
+	assert.NotNil(t, data)
+
+	body = []byte(`{"refs": ["886e09000000000000000000"]}`)
+
+	resp = performRequest(t, router, "GET", routerGroupName+"/components", body)
+
+	assert.Equal(t, http.StatusNotFound, resp.Code)
+
 	//Failure
 	resp = performRequest(t, router, "GET", failureRouterGroupName+"/components", nil)
 

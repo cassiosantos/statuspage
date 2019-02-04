@@ -28,7 +28,7 @@ type Service interface {
 	ComponentExists(map[string]interface{}) (models.Component, bool)
 	CreateComponent(component models.Component) (string, error)
 	FindComponent(queryParam map[string]interface{}) (models.Component, error)
-	ListComponents() ([]models.Component, error)
+	ListComponents(refs []string) ([]models.Component, error)
 	RemoveComponent(componentRef string) error
 	UpdateComponent(componentRef string, component models.Component) error
 }

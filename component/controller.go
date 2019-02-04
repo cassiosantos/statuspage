@@ -80,8 +80,14 @@ func (ctrl *ComponentController) Find(c *gin.Context) {
 }
 
 func (ctrl *ComponentController) List(c *gin.Context) {
-	components, err := ctrl.service.ListComponents()
+	var comps models.ComponentRefs
+	c.ShouldBindJSON(&comps)
+	components, err := ctrl.service.ListComponents(comps.Refs)
 	if err != nil {
+		if err.Error() == errors.ErrNotFound {
+			c.AbortWithError(http.StatusNotFound, err)
+			return
+		}
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}

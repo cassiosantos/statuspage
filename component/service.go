@@ -48,8 +48,19 @@ func (s *componentService) FindComponent(queryParam map[string]interface{}) (mod
 	return s.repo.Find(queryParam)
 }
 
-func (s *componentService) ListComponents() ([]models.Component, error) {
-	return s.repo.List()
+func (s *componentService) ListComponents(refs []string) ([]models.Component, error) {
+	if len(refs) == 0 {
+		return s.repo.List()
+	}
+	comps := make([]models.Component, 0)
+	for _, r := range refs {
+		if c, exist := s.ComponentExists(map[string]interface{}{"ref": r}); exist {
+			comps = append(comps, c)
+		} else {
+			return []models.Component{}, errors.E(errors.ErrNotFound)
+		}
+	}
+	return comps, nil
 }
 
 func (s *componentService) RemoveComponent(id string) error {

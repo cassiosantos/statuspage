@@ -23,7 +23,8 @@ func TestNewComponentService(t *testing.T) {
 func TestComponentService_ListComponents(t *testing.T) {
 	s := component.NewService(mock.NewMockComponentDAO())
 
-	c, err := s.ListComponents()
+	refs := make([]string, 0)
+	c, err := s.ListComponents(refs)
 	if assert.Nil(t, err) && assert.NotNil(t, c) {
 		if assert.IsType(t, []models.Component{}, c) {
 			assert.Equal(t, "first", c[0].Name)
