@@ -7,6 +7,9 @@ test-all: dep-vendor
 	for i in `find ./* -maxdepth 1 -type d -not -path "./vendor*" -not -path "./docs*"`; do go test $$i -coverprofile /dev/null ; done
 	docker-compose down
 
+build:
+	docker-compose build statuspage
+
 run: 
 	docker-compose down
 	docker-compose up -d 

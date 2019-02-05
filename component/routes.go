@@ -18,6 +18,6 @@ func ComponentRouter(componentService Service, router *gin.RouterGroup) {
 
 	componentsRouter := router.Group("/components")
 	{
-		componentsRouter.GET("", componentController.List)
+		componentsRouter.POST("", componentController.List)
 	}
 }

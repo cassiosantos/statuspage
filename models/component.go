@@ -6,3 +6,7 @@ type Component struct {
 	Name    string `json:"name" binding:"required"`
 	Address string `json:"address"`
 }
+
+type ComponentRefs struct {
+	Refs []string `json:"refs,omitempty"`
+}

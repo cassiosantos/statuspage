@@ -7,7 +7,7 @@ services:
       - 27017:27017
     container_name: statuspage_mongo
 
-  status:
+  statuspage:
     build: ./
     restart: unless-stopped
     ports:
