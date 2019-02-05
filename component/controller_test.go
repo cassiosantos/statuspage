@@ -157,7 +157,7 @@ func TestController_Delete(t *testing.T) {
 }
 
 func TestController_List(t *testing.T) {
-	resp := performRequest(t, router, "GET", routerGroupName+"/components", nil)
+	resp := performRequest(t, router, "POST", routerGroupName+"/components", nil)
 
 	assert.Equal(t, http.StatusOK, resp.Code)
 
@@ -168,7 +168,7 @@ func TestController_List(t *testing.T) {
 
 	body := []byte(`{"refs": ["` + data[0].Ref + `","` + data[1].Ref + `"]}`)
 
-	resp = performRequest(t, router, "GET", routerGroupName+"/components", body)
+	resp = performRequest(t, router, "POST", routerGroupName+"/components", body)
 
 	assert.Equal(t, http.StatusOK, resp.Code)
 
@@ -178,12 +178,12 @@ func TestController_List(t *testing.T) {
 
 	body = []byte(`{"refs": ["886e09000000000000000000"]}`)
 
-	resp = performRequest(t, router, "GET", routerGroupName+"/components", body)
+	resp = performRequest(t, router, "POST", routerGroupName+"/components", body)
 
 	assert.Equal(t, http.StatusNotFound, resp.Code)
 
 	//Failure
-	resp = performRequest(t, router, "GET", failureRouterGroupName+"/components", nil)
+	resp = performRequest(t, router, "POST", failureRouterGroupName+"/components", nil)
 
 	assert.Equal(t, http.StatusInternalServerError, resp.Code)
 }
