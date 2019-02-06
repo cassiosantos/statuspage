@@ -1,8 +1,9 @@
 package mock
 
 import (
-	"github.com/involvestecnologia/statuspage/models"
 	"time"
+
+	"github.com/involvestecnologia/statuspage/models"
 )
 
 func PrometheusModel() map[string]models.PrometheusIncomingWebhook {
@@ -14,7 +15,7 @@ func PrometheusModel() map[string]models.PrometheusIncomingWebhook {
 					Incident: models.Incident{
 						ComponentRef: "123123",
 						Description:  "status ok",
-						Status:       0,
+						Status:       1,
 					},
 					Component: models.Component{
 						Ref:     "123123",
@@ -34,7 +35,7 @@ func PrometheusModel() map[string]models.PrometheusIncomingWebhook {
 					Incident: models.Incident{
 						ComponentRef: ZeroTimeHex,
 						Description:  "status ok",
-						Status:       0,
+						Status:       1,
 					},
 					Component: models.Component{
 						Ref:     ZeroTimeHex,
@@ -67,7 +68,7 @@ func PrometheusModel() map[string]models.PrometheusIncomingWebhook {
 					Incident: models.Incident{
 						ComponentRef: ZeroTimeHex,
 						Description:  "status ok",
-						Status:       0,
+						Status:       1,
 					},
 					StartsAt:     time.Now(),
 					EndsAt:       time.Now(),
@@ -79,7 +80,7 @@ func PrometheusModel() map[string]models.PrometheusIncomingWebhook {
 			Alerts: []models.PrometheusAlerts{
 				models.PrometheusAlerts{
 					Status: "RESOLVED",
-					Component:	models.Component{
+					Component: models.Component{
 						Ref:     "ZeroTimeHex",
 						Name:    "first",
 						Address: "",
@@ -94,9 +95,29 @@ func PrometheusModel() map[string]models.PrometheusIncomingWebhook {
 			Alerts: []models.PrometheusAlerts{
 				models.PrometheusAlerts{
 					Status: "RESOLVED",
-					Component:	models.Component{
+					Component: models.Component{
 						Ref:     ZeroTimeHex,
 						Name:    "RefTest",
+						Address: "",
+					},
+					StartsAt:     time.Now(),
+					EndsAt:       time.Now(),
+					GeneratorURL: "ur.com",
+				},
+			},
+		},
+		"ModelCompleteWithBadStatus": {
+			Alerts: []models.PrometheusAlerts{
+				{
+					Status: "RESOLVED",
+					Incident: models.Incident{
+						ComponentRef: "123123",
+						Description:  "status ok",
+						Status:       3,
+					},
+					Component: models.Component{
+						Ref:     "123123",
+						Name:    "CompleteModel",
 						Address: "",
 					},
 					StartsAt:     time.Now(),

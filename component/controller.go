@@ -25,11 +25,11 @@ func (ctrl *ComponentController) Create(c *gin.Context) {
 
 	ref, err := ctrl.service.CreateComponent(newComponent)
 	if err != nil {
-		switch err.Error() {
-		case errors.ErrComponentNameAlreadyExists:
+		switch err.(type) {
+		case *errors.ErrComponentNameAlreadyExists:
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
-		case errors.ErrComponentRefAlreadyExists:
+		case *errors.ErrComponentRefAlreadyExists:
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		default:
@@ -49,11 +49,11 @@ func (ctrl *ComponentController) Update(c *gin.Context) {
 	}
 	err := ctrl.service.UpdateComponent(id, newComponent)
 	if err != nil {
-		switch err.Error() {
-		case errors.ErrNotFound:
+		switch err.(type) {
+		case *errors.ErrNotFound:
 			c.AbortWithError(http.StatusNotFound, err)
 			return
-		case errors.ErrComponentNameAlreadyExists:
+		case *errors.ErrComponentNameAlreadyExists:
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		default:
@@ -69,12 +69,14 @@ func (ctrl *ComponentController) Find(c *gin.Context) {
 	ref := c.Param("ref")
 	component, err := ctrl.service.FindComponent(map[string]interface{}{queryBy: ref})
 	if err != nil {
-		if err.Error() == errors.ErrNotFound {
+		switch err.(type) {
+		case *errors.ErrNotFound:
 			c.AbortWithError(http.StatusNotFound, err)
 			return
+		default:
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
 		}
-		c.AbortWithError(http.StatusInternalServerError, err)
-		return
 	}
 	c.JSON(http.StatusOK, component)
 }
@@ -84,12 +86,14 @@ func (ctrl *ComponentController) List(c *gin.Context) {
 	c.ShouldBindJSON(&comps)
 	components, err := ctrl.service.ListComponents(comps.Refs)
 	if err != nil {
-		if err.Error() == errors.ErrNotFound {
+		switch err.(type) {
+		case *errors.ErrNotFound:
 			c.AbortWithError(http.StatusNotFound, err)
 			return
+		default:
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
 		}
-		c.AbortWithError(http.StatusInternalServerError, err)
-		return
 	}
 	c.JSON(http.StatusOK, components)
 }
@@ -98,12 +102,14 @@ func (ctrl *ComponentController) Delete(c *gin.Context) {
 	ref := c.Param("ref")
 	err := ctrl.service.RemoveComponent(ref)
 	if err != nil {
-		if err.Error() == errors.ErrNotFound {
+		switch err.(type) {
+		case *errors.ErrNotFound:
 			c.AbortWithError(http.StatusNotFound, err)
 			return
+		default:
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
 		}
-		c.AbortWithError(http.StatusInternalServerError, err)
-		return
 	}
 	c.JSON(http.StatusNoContent, "")
 }

@@ -1,11 +1,12 @@
 package prometheus
 
 import (
+	"testing"
+
 	"github.com/involvestecnologia/statuspage/component"
 	"github.com/involvestecnologia/statuspage/incident"
 	"github.com/involvestecnologia/statuspage/mock"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func NewServicesMock(failure bool, m string) Service {
@@ -31,22 +32,33 @@ func NewServicesMock(failure bool, m string) Service {
 }
 
 func TestPrometheusService_Service(t *testing.T) {
-	assert.Implements(t, (*Service)(nil), NewServicesMock(false,""))
+	assert.Implements(t, (*Service)(nil), NewServicesMock(false, ""))
 }
 
 func TestPrometheusService_ProcessIncomingWebhookReturnNil(t *testing.T) {
 	newPrometheusMock := mock.PrometheusModel()
-	err := NewServicesMock(false,"").ProcessIncomingWebhook(newPrometheusMock["ModelComplete"])
+	err := NewServicesMock(false, "").ProcessIncomingWebhook(newPrometheusMock["ModelComplete"])
 	assert.Nil(t, err)
 }
 
 func TestPrometheusService_ProcessIncomingWebhookReturnIncidentErr(t *testing.T) {
 	newPrometheusMock := mock.PrometheusModel()
-	err := NewServicesMock(true, "incident").ProcessIncomingWebhook(newPrometheusMock["ModelWithoutRef"])
-	assert.NotNil(t, err)
+	err := NewServicesMock(false, "incident").ProcessIncomingWebhook(newPrometheusMock["ModelWithoutRef"])
+	assert.Nil(t, err)
+
+	mock := NewServicesMock(false, "incident")
+	data := newPrometheusMock["ModelCompleteWithBadStatus"]
+	err = mock.ProcessIncomingWebhook(data)
+	assert.Nil(t, err)
+
+	data = newPrometheusMock["ModelCompleteWithBadStatus"]
+	data.Alerts[0].Incident.Status = 2
+	err = mock.ProcessIncomingWebhook(data)
+	assert.Nil(t, err)
 
 	err = NewServicesMock(true, "incident").ProcessIncomingWebhook(newPrometheusMock["ModelWithoutName"])
 	assert.NotNil(t, err)
+
 }
 
 func TestPrometheusService_ProcessIncomingWebhookReturnComponentErr(t *testing.T) {
@@ -54,9 +66,9 @@ func TestPrometheusService_ProcessIncomingWebhookReturnComponentErr(t *testing.T
 	err := NewServicesMock(true, "component").ProcessIncomingWebhook(newPrometheusMock["ModelWithoutRef"])
 	assert.NotNil(t, err)
 
-	err = NewServicesMock(false,"").ProcessIncomingWebhook(newPrometheusMock["ModelComponentNameAlreadyExists"])
+	err = NewServicesMock(false, "").ProcessIncomingWebhook(newPrometheusMock["ModelComponentNameAlreadyExists"])
 	assert.NotNil(t, err)
 
-	err = NewServicesMock(false,"").ProcessIncomingWebhook(newPrometheusMock["ModelComponentRefAlreadyExists"])
+	err = NewServicesMock(false, "").ProcessIncomingWebhook(newPrometheusMock["ModelComponentRefAlreadyExists"])
 	assert.Nil(t, err)
 }

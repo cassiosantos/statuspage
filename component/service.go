@@ -43,7 +43,7 @@ func (s *componentService) UpdateComponent(ref string, component models.Componen
 
 func (s *componentService) FindComponent(queryParam map[string]interface{}) (models.Component, error) {
 	if len(queryParam) == 0 {
-		return models.Component{}, errors.E(errors.ErrInvalidQuery)
+		return models.Component{}, &errors.ErrInvalidQuery{Message: errors.ErrInvalidQueryMessage}
 	}
 	return s.repo.Find(queryParam)
 }
@@ -57,7 +57,7 @@ func (s *componentService) ListComponents(refs []string) ([]models.Component, er
 		if c, exist := s.ComponentExists(map[string]interface{}{"ref": r}); exist {
 			comps = append(comps, c)
 		} else {
-			return []models.Component{}, errors.E(errors.ErrNotFound)
+			return []models.Component{}, &errors.ErrNotFound{Message: errors.ErrNotFoundMessage}
 		}
 	}
 	return comps, nil
@@ -74,21 +74,21 @@ func (s *componentService) ComponentExists(componentFields map[string]interface{
 
 func (s *componentService) isValidComponent(c models.Component) (bool, error) {
 	if c.Name == "" {
-		return false, errors.E(errors.ErrComponentNameIsEmpty)
+		return false, &errors.ErrComponentNameIsEmpty{Message: errors.ErrComponentNameIsEmptyMessage}
 	}
 	return true, nil
 }
 
 func (s *componentService) isComponentNameInUse(c models.Component) (bool, error) {
 	if comp, exist := s.ComponentExists(map[string]interface{}{"name": c.Name}); exist && comp.Ref != c.Ref {
-		return true, errors.E(errors.ErrComponentNameAlreadyExists)
+		return true, &errors.ErrComponentNameAlreadyExists{Message: errors.ErrComponentRefAlreadyExistsMessage}
 	}
 	return false, nil
 }
 
 func (s *componentService) isComponentRefInUse(c models.Component) (bool, error) {
 	if _, exist := s.ComponentExists(map[string]interface{}{"ref": c.Ref}); exist {
-		return true, errors.E(errors.ErrComponentRefAlreadyExists)
+		return true, &errors.ErrComponentRefAlreadyExists{Message: errors.ErrComponentRefAlreadyExistsMessage}
 	}
 	return false, nil
 }
