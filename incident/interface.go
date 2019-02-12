@@ -31,7 +31,7 @@ type Service interface {
 	UpdateIncident(incident models.Incident) error
 	GetLastIncident(componentRef string) (models.Incident, error)
 	FindIncidents(query map[string]interface{}) ([]models.Incident, error)
-	ListIncidents(year string, month string, unresolved bool) ([]models.Incident, error)
+	ListIncidents(controller models.ListIncidentController) ([]models.Incident, error)
 	ValidateMonth(monthArg string) (int, error)
 	ValidateYear(yearArg string) (int, error)
 }

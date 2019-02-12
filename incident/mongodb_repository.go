@@ -3,7 +3,7 @@ package incident
 import (
 	"time"
 
-	mgo "github.com/globalsign/mgo"
+	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/involvestecnologia/statuspage/errors"
 	"github.com/involvestecnologia/statuspage/models"
@@ -62,8 +62,8 @@ func (r *mongoRepository) List(startDt time.Time, endDt time.Time, unresolved bo
 	defer mongoFailure(&err)
 	findQ := bson.M{
 		"date": bson.M{
-			"$gt": startDt.Add(-24 * time.Hour),
-			"$lt": endDt.Add(24 * time.Hour),
+			"$gt": startDt,
+			"$lt": endDt,
 		},
 	}
 

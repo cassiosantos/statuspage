@@ -22,15 +22,15 @@ func NewPrometheusService(incident incident.Service, component component.Service
 func (svc *prometheusService) ProcessIncomingWebhook(incoming models.PrometheusIncomingWebhook) error {
 	for _, alerts := range incoming.Alerts {
 		ref, err := svc.component.CreateComponent(alerts.Component)
-		if svc.shouldFail(err) {
+		alerts.Component.Ref = ref
+		if svc.shouldFail(&alerts,err) {
 			return err
 		}
-		alerts.Incident.ComponentRef = ref
 		if alerts.Incident.Date.IsZero() {
 			alerts.Incident.Date = time.Now()
 		}
 		if err := svc.incident.CreateIncidents(alerts.Incident); err != nil {
-			if svc.shouldFail(err) {
+			if svc.shouldFail(&alerts, err) {
 				return err
 			}
 		}
@@ -38,13 +38,19 @@ func (svc *prometheusService) ProcessIncomingWebhook(incoming models.PrometheusI
 	return nil
 }
 
-func (svc *prometheusService) shouldFail(err error) bool {
+func (svc *prometheusService) shouldFail(alerts *models.PrometheusAlerts, err error) bool {
 	switch err.(type) {
 	case *errors.ErrComponentNameIsEmpty:
 		return true
 	case *errors.ErrComponentNameAlreadyExists:
+		if err = svc.addExistingComponentRef(alerts); err != nil {
+			return true
+		}
 		return false
 	case *errors.ErrComponentRefAlreadyExists:
+		if err = svc.addExistingComponentRef(alerts); err != nil {
+			return true
+		}
 		return false
 	case *errors.ErrIncidentStatusIgnored:
 		return false
@@ -53,4 +59,13 @@ func (svc *prometheusService) shouldFail(err error) bool {
 	default:
 		return true
 	}
+}
+
+func (svc *prometheusService) addExistingComponentRef(alerts *models.PrometheusAlerts) (error) {
+	c, err := svc.component.FindComponent(map[string]interface{}{"name": alerts.Component.Name})
+	if err != nil {
+		return err
+	}
+	alerts.Incident.ComponentRef = c.Ref
+	return nil
 }

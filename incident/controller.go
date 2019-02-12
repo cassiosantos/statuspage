@@ -63,14 +63,20 @@ func (ctrl *Controller) Find(c *gin.Context) {
 
 //List it's the handler function for Component listing endpoints
 func (ctrl *Controller) List(c *gin.Context) {
-	mQ := c.Query("month")
-	yQ := c.Query("year")
 	rQ, err := strconv.ParseBool(c.DefaultQuery("unresolved", "false"))
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, &errors.ErrInvalidQuery{Message: errors.ErrInvalidQueryMessage})
 		return
 	}
-	incidents, err := ctrl.service.ListIncidents(yQ, mQ, rQ)
+
+	ctrlM := models.ListIncidentController{
+		Month: c.Query("month"),
+		Year: c.Query("year"),
+		Day: c.Query("day"),
+		Unresolved: rQ,
+	}
+
+	incidents, err := ctrl.service.ListIncidents(ctrlM)
 	if err != nil {
 		switch err.(type) {
 		case *errors.ErrInvalidYear:
@@ -79,11 +85,13 @@ func (ctrl *Controller) List(c *gin.Context) {
 		case *errors.ErrInvalidMonth:
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
+		case *errors.ErrInvalidDay:
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
 		default:
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
-
 	}
 	c.JSON(http.StatusOK, incidents)
 }

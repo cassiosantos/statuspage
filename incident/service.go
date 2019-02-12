@@ -80,21 +80,26 @@ func (s *incidentService) GetLastIncident(componentRef string) (models.Incident,
 	return s.repo.FindOne(map[string]interface{}{"component_ref": componentRef})
 }
 
-func (s *incidentService) ListIncidents(year string, month string, unresolved bool) ([]models.Incident, error) {
+func (s *incidentService) ListIncidents(c models.ListIncidentController) ([]models.Incident, error) {
 	var iComp []models.Incident
 	var start time.Time
 	end := time.Now()
-	if year == "" && month == "" {
-		return s.repo.List(start, end, unresolved)
+	if c.Year == "" && c.Month == "" && c.Day == "" {
+		return s.repo.List(start, end, c.Unresolved)
 	}
 
-	m, err := s.ValidateMonth(month)
-	if err != nil && month != "" {
+	m, err := s.ValidateMonth(c.Month)
+	if err != nil && c.Month != "" {
 		return iComp, err
 	}
 
-	y, err := s.ValidateYear(year)
-	if err != nil && year != "" {
+	y, err := s.ValidateYear(c.Year)
+	if err != nil && c.Year != "" {
+		return iComp, err
+	}
+
+	d, err := s.ValidateDay(c.Day)
+	if err != nil && c.Day != "" {
 		return iComp, err
 	}
 
@@ -103,15 +108,21 @@ func (s *incidentService) ListIncidents(year string, month string, unresolved bo
 	}
 
 	if m == -1 {
-		start = time.Date(y, 1, 1, 0, 0, 0, 0, time.UTC)
-		end = time.Date(y+1, 1, 0, 23, 59, 59, 0, time.UTC)
-		return s.repo.List(start, end, unresolved)
+		start = time.Date(y, 0, d, 0, 0, 0, 0, time.UTC)
+		end = time.Date(y, 13, d, 23, 59, 59, 0, time.UTC)
+		return s.repo.List(start, end, c.Unresolved)
 	}
 
-	start = time.Date(y, time.Month(m), 1, 0, 0, 0, 0, time.UTC)
-	end = time.Date(y, time.Month(m+1), 0, 23, 59, 59, 0, time.UTC)
+	if d == -1 {
+		start = time.Date(y, time.Month(m), 1, 0, 0, 0, 0, time.UTC)
+		end = time.Date(y, time.Month(m), 31, 23, 59, 59, 0, time.UTC)
+		return s.repo.List(start, end, c.Unresolved)
+	}
 
-	return s.repo.List(start, end, unresolved)
+	start = time.Date(y, time.Month(m), d, 0, 0, 0, 0, time.UTC)
+	end = time.Date(y, time.Month(m), d, 23, 59, 59, 0, time.UTC)
+
+	return s.repo.List(start, end, c.Unresolved)
 }
 
 func (s *incidentService) ValidateMonth(month string) (int, error) {
@@ -136,4 +147,16 @@ func (s *incidentService) ValidateYear(year string) (int, error) {
 		return -1, &errors.ErrInvalidYear{Message: errors.ErrInvalidYearMessage}
 	}
 	return y, nil
+}
+
+func (s *incidentService) ValidateDay(day string) (int, error) {
+	d, err := strconv.Atoi(day)
+	if err != nil {
+		return -1, err
+	}
+	valid := d > 0 && d <= time.Now().Day()
+	if !valid {
+		return -1, &errors.ErrInvalidDay{Message: errors.ErrInvalidDayMessage}
+	}
+	return d, nil
 }

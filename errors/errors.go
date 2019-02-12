@@ -34,6 +34,9 @@ const (
 	//ErrInvalidYearMessage is the invalid year value default message
 	ErrInvalidYearMessage = "Invalid year"
 
+	//ErrInvalidYearMessage is the invalid year value default message
+	ErrInvalidDayMessage = "Invalid day"
+
 	//ErrTriggerUnavailableMessage is the trigger unavailable default message
 	ErrTriggerUnavailableMessage = "Unavailable Trigger"
 
@@ -97,8 +100,13 @@ type ErrInvalidMonth struct {
 	Message string
 }
 
-//ErrInvalidYear is a error type throwed when a invalid year value is provided
+//ErrInvalidYear is a error type throwed when a invalid day value is provided
 type ErrInvalidYear struct {
+	Message string
+}
+
+//ErrInvalidDay is a error type throwed when a invalid day value is provided
+type ErrInvalidDay struct {
 	Message string
 }
 
@@ -153,6 +161,9 @@ func (e *ErrInvalidMonth) Error() string {
 	return e.Message
 }
 func (e *ErrInvalidYear) Error() string {
+	return e.Message
+}
+func (e *ErrInvalidDay) Error() string {
 	return e.Message
 }
 func (e *ErrTriggerUnavailable) Error() string {
