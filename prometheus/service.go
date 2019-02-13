@@ -48,9 +48,6 @@ func (svc *prometheusService) shouldFail(alerts *models.PrometheusAlerts, err er
 		}
 		return false
 	case *errors.ErrComponentRefAlreadyExists:
-		if err = svc.addExistingComponentRef(alerts); err != nil {
-			return true
-		}
 		return false
 	case *errors.ErrIncidentStatusIgnored:
 		return false

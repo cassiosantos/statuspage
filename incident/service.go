@@ -83,36 +83,38 @@ func (s *incidentService) GetLastIncident(componentRef string) (models.Incident,
 func (s *incidentService) ListIncidents(queryParameters models.ListIncidentQueryParameters) ([]models.Incident, error) {
 	var iComp []models.Incident
 	var start time.Time
+	var err error
 	end := time.Now()
-	if queryParameters.StartDate == "" && queryParameters.EndDate == "" {
-		return s.repo.List(start, end, queryParameters.Unresolved)
+
+	if queryParameters.StartDate != "" {
+		start, err = time.Parse(time.RFC3339, queryParameters.StartDate)
+		if err != nil {
+			return iComp, err
+		}
 	}
 
-	startDate, err := time.Parse(time.RFC3339, queryParameters.StartDate)
-	if err != nil {
+	if queryParameters.EndDate != "" {
+		end, err = time.Parse(time.RFC3339, queryParameters.EndDate)
+		if err != nil {
+			return iComp, err
+		}
+	}
+
+	if err := s.ValidateDate(start, end); err != nil {
 		return iComp, err
 	}
 
-	endDate, err := time.Parse(time.RFC3339, queryParameters.EndDate)
-	if err != nil {
-		return iComp, err
-	}
-
-	if err := s.ValidateDate(startDate, endDate); err != nil {
-		return iComp, err
-	}
-
-	return s.repo.List(startDate, endDate, queryParameters.Unresolved)
+	return s.repo.List(start, end, queryParameters.Unresolved)
 }
 
 func (s *incidentService) ValidateDate(startDate, endDate time.Time) error {
 
-	now, err := time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+	now, err := time.Parse(time.RFC3339, time.Now().Add(1 * time.Second).Format(time.RFC3339))
 	if err != nil {
 		return err
 	}
 
-	if startDate.After(endDate) || startDate.After(now) || endDate.Before(startDate) {
+	if startDate.After(endDate) || startDate.After(now)  || endDate.After(now) {
 		return &errors.ErrInvalidDate{Message: errors.ErrInvalidDateMessage}
 	}
 

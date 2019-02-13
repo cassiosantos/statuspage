@@ -62,7 +62,7 @@ func (ctrl *Controller) Find(c *gin.Context) {
 
 //List it's the handler function for Component listing endpoints
 func (ctrl *Controller) List(c *gin.Context) {
-	rQ, err := strconv.ParseBool(c.DefaultQuery("unresolved", "false"))
+	unresolvedQuery, err := strconv.ParseBool(c.DefaultQuery("unresolved", "false"))
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, &errors.ErrInvalidQuery{Message: errors.ErrInvalidQueryMessage})
 		return
@@ -71,7 +71,7 @@ func (ctrl *Controller) List(c *gin.Context) {
 	queryParameters := models.ListIncidentQueryParameters{
 		StartDate:  c.Query("startDate"),
 		EndDate:    c.Query("endDate"),
-		Unresolved: rQ,
+		Unresolved: unresolvedQuery,
 	}
 
 	incidents, err := ctrl.service.ListIncidents(queryParameters)
