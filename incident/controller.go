@@ -60,7 +60,7 @@ func (ctrl *Controller) Find(c *gin.Context) {
 	c.JSON(http.StatusOK, incidents)
 }
 
-//List it's the handler function for Component listing endpoints
+//List it's the handler function for Incident listing endpoints
 func (ctrl *Controller) List(c *gin.Context) {
 	rQ, err := strconv.ParseBool(c.DefaultQuery("unresolved", "false"))
 	if err != nil {
