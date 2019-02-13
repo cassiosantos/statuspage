@@ -1,7 +1,6 @@
 package incident
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/involvestecnologia/statuspage/component"
@@ -18,7 +17,8 @@ type incidentService struct {
 func NewService(r Repository, component component.Service) Service {
 	return &incidentService{
 		component: component,
-		repo:      r}
+		repo:      r,
+	}
 }
 
 func (s *incidentService) CreateIncidents(incident models.Incident) error {
@@ -80,83 +80,41 @@ func (s *incidentService) GetLastIncident(componentRef string) (models.Incident,
 	return s.repo.FindOne(map[string]interface{}{"component_ref": componentRef})
 }
 
-func (s *incidentService) ListIncidents(c models.ListIncidentController) ([]models.Incident, error) {
+func (s *incidentService) ListIncidents(queryParameters models.ListIncidentQueryParameters) ([]models.Incident, error) {
 	var iComp []models.Incident
 	var start time.Time
 	end := time.Now()
-	if c.Year == "" && c.Month == "" && c.Day == "" {
-		return s.repo.List(start, end, c.Unresolved)
+	if queryParameters.StartDate == "" && queryParameters.EndDate == "" {
+		return s.repo.List(start, end, queryParameters.Unresolved)
 	}
 
-	m, err := s.ValidateMonth(c.Month)
-	if err != nil && c.Month != "" {
+	startDate, err := time.Parse(time.RFC3339, queryParameters.StartDate)
+	if err != nil {
 		return iComp, err
 	}
 
-	y, err := s.ValidateYear(c.Year)
-	if err != nil && c.Year != "" {
+	endDate, err := time.Parse(time.RFC3339, queryParameters.EndDate)
+	if err != nil {
 		return iComp, err
 	}
 
-	d, err := s.ValidateDay(c.Day)
-	if err != nil && c.Day != "" {
+	if err := s.ValidateDate(startDate, endDate); err != nil {
 		return iComp, err
 	}
 
-	if y == -1 {
-		y = time.Now().Year()
-	}
-
-	if m == -1 {
-		start = time.Date(y, 0, d, 0, 0, 0, 0, time.UTC)
-		end = time.Date(y, 13, d, 23, 59, 59, 0, time.UTC)
-		return s.repo.List(start, end, c.Unresolved)
-	}
-
-	if d == -1 {
-		start = time.Date(y, time.Month(m), 1, 0, 0, 0, 0, time.UTC)
-		end = time.Date(y, time.Month(m), 31, 23, 59, 59, 0, time.UTC)
-		return s.repo.List(start, end, c.Unresolved)
-	}
-
-	start = time.Date(y, time.Month(m), d, 0, 0, 0, 0, time.UTC)
-	end = time.Date(y, time.Month(m), d, 23, 59, 59, 0, time.UTC)
-
-	return s.repo.List(start, end, c.Unresolved)
+	return s.repo.List(startDate, endDate, queryParameters.Unresolved)
 }
 
-func (s *incidentService) ValidateMonth(month string) (int, error) {
-	m, err := strconv.Atoi(month)
-	if err != nil {
-		return -1, err
-	}
-	valid := m > 0 && m < 13
-	if !valid {
-		return -1, &errors.ErrInvalidMonth{Message: errors.ErrInvalidMonthMessage}
-	}
-	return m, nil
-}
+func (s *incidentService) ValidateDate(startDate, endDate time.Time) error {
 
-func (s *incidentService) ValidateYear(year string) (int, error) {
-	y, err := strconv.Atoi(year)
+	now, err := time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 	if err != nil {
-		return -1, err
+		return err
 	}
-	valid := y > 0 && y <= time.Now().Year()
-	if !valid {
-		return -1, &errors.ErrInvalidYear{Message: errors.ErrInvalidYearMessage}
-	}
-	return y, nil
-}
 
-func (s *incidentService) ValidateDay(day string) (int, error) {
-	d, err := strconv.Atoi(day)
-	if err != nil {
-		return -1, err
+	if startDate.After(endDate) || startDate.After(now) || endDate.Before(startDate) {
+		return &errors.ErrInvalidDate{Message: errors.ErrInvalidDateMessage}
 	}
-	valid := d > 0 && d <= time.Now().Day()
-	if !valid {
-		return -1, &errors.ErrInvalidDay{Message: errors.ErrInvalidDayMessage}
-	}
-	return d, nil
+
+	return nil
 }

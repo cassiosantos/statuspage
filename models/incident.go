@@ -14,11 +14,10 @@ type Incident struct {
 	ComponentRef string        `json:"component_ref" bson:"component_ref" binding:"required"`
 }
 
-type ListIncidentController struct {
-	Day		string
-	Month	string
-	Year	string
-	Unresolved	bool
+type ListIncidentQueryParameters struct {
+	StartDate  string
+	EndDate    string
+	Unresolved bool
 }
 
 const (

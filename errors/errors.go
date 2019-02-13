@@ -28,14 +28,8 @@ const (
 	//ErrClientNameAlreadyExistsMessage is the Client name already in use default message
 	ErrClientNameAlreadyExistsMessage = "Client name already exists"
 
-	//ErrInvalidMonthMessage is the invalid month value default message
-	ErrInvalidMonthMessage = "Invalid month"
-
-	//ErrInvalidYearMessage is the invalid year value default message
-	ErrInvalidYearMessage = "Invalid year"
-
-	//ErrInvalidYearMessage is the invalid year value default message
-	ErrInvalidDayMessage = "Invalid day"
+	//ErrInvalidDateMessage is the invalid date value default message
+	ErrInvalidDateMessage = "Invalid date"
 
 	//ErrTriggerUnavailableMessage is the trigger unavailable default message
 	ErrTriggerUnavailableMessage = "Unavailable Trigger"
@@ -95,18 +89,8 @@ type ErrClientNameAlreadyExists struct {
 	Message string
 }
 
-//ErrInvalidMonth is a error type throwed when a invalid month value is provided
-type ErrInvalidMonth struct {
-	Message string
-}
-
-//ErrInvalidYear is a error type throwed when a invalid day value is provided
-type ErrInvalidYear struct {
-	Message string
-}
-
-//ErrInvalidDay is a error type throwed when a invalid day value is provided
-type ErrInvalidDay struct {
+//ErrInvalidDate is a error type throwed when a invalid date value is provided
+type ErrInvalidDate struct {
 	Message string
 }
 
@@ -157,13 +141,7 @@ func (e *ErrClientRefAlreadyExists) Error() string {
 func (e *ErrClientNameAlreadyExists) Error() string {
 	return e.Message
 }
-func (e *ErrInvalidMonth) Error() string {
-	return e.Message
-}
-func (e *ErrInvalidYear) Error() string {
-	return e.Message
-}
-func (e *ErrInvalidDay) Error() string {
+func (e *ErrInvalidDate) Error() string {
 	return e.Message
 }
 func (e *ErrTriggerUnavailable) Error() string {

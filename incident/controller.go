@@ -1,12 +1,11 @@
 package incident
 
 import (
-	"net/http"
-	"strconv"
-
 	"github.com/gin-gonic/gin"
 	"github.com/involvestecnologia/statuspage/errors"
 	"github.com/involvestecnologia/statuspage/models"
+	"net/http"
+	"strconv"
 )
 
 //Controller contains all the available handlers
@@ -69,23 +68,16 @@ func (ctrl *Controller) List(c *gin.Context) {
 		return
 	}
 
-	ctrlM := models.ListIncidentController{
-		Month: c.Query("month"),
-		Year: c.Query("year"),
-		Day: c.Query("day"),
+	queryParameters := models.ListIncidentQueryParameters{
+		StartDate:  c.Query("startDate"),
+		EndDate:    c.Query("endDate"),
 		Unresolved: rQ,
 	}
 
-	incidents, err := ctrl.service.ListIncidents(ctrlM)
+	incidents, err := ctrl.service.ListIncidents(queryParameters)
 	if err != nil {
 		switch err.(type) {
-		case *errors.ErrInvalidYear:
-			c.AbortWithError(http.StatusBadRequest, err)
-			return
-		case *errors.ErrInvalidMonth:
-			c.AbortWithError(http.StatusBadRequest, err)
-			return
-		case *errors.ErrInvalidDay:
+		case *errors.ErrInvalidDate:
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		default:
