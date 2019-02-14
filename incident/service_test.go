@@ -160,7 +160,7 @@ func TestIncidentService_ValidateMonth(t *testing.T) {
 	end, err = time.Parse(time.RFC3339, end.Add(24*time.Hour).Format(time.RFC3339))
 	assert.Nil(t, err)
 	err = s.ValidateDate(start, end)
-	assert.NotNil(t, err)
+	assert.Nil(t, err)
 
 	end, err = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 	assert.Nil(t, err)

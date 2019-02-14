@@ -168,7 +168,7 @@ func TestController_List(t *testing.T) {
 	// Invalid: query parameters end
 	resp = performRequest(t, router, "GET", routerGroupName+"/incidents?endDate="+end, nil)
 
-	assert.Equal(t, http.StatusBadRequest, resp.Code)
+	assert.Equal(t, http.StatusOK, resp.Code)
 
 	start = time.Now().Add(-2 * time.Hour).Format(time.RFC3339)
 	end = time.Now().Add(-3 * time.Hour).Format(time.RFC3339)
