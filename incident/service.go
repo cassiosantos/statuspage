@@ -109,12 +109,12 @@ func (s *incidentService) ListIncidents(queryParameters models.ListIncidentQuery
 
 func (s *incidentService) ValidateDate(startDate, endDate time.Time) error {
 
-	now, err := time.Parse(time.RFC3339, time.Now().Add(1 * time.Second).Format(time.RFC3339))
+	now, err := time.Parse(time.RFC3339, time.Now().Add(1*time.Second).Format(time.RFC3339))
 	if err != nil {
 		return err
 	}
 
-	if startDate.After(endDate) || startDate.After(now)  || endDate.After(now) {
+	if startDate.After(endDate) || startDate.After(now) {
 		return &errors.ErrInvalidDate{Message: errors.ErrInvalidDateMessage}
 	}
 
