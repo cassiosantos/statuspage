@@ -1,7 +1,6 @@
 package incident
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/involvestecnologia/statuspage/component"
@@ -18,7 +17,8 @@ type incidentService struct {
 func NewService(r Repository, component component.Service) Service {
 	return &incidentService{
 		component: component,
-		repo:      r}
+		repo:      r,
+	}
 }
 
 func (s *incidentService) CreateIncidents(incident models.Incident) error {
@@ -80,60 +80,43 @@ func (s *incidentService) GetLastIncident(componentRef string) (models.Incident,
 	return s.repo.FindOne(map[string]interface{}{"component_ref": componentRef})
 }
 
-func (s *incidentService) ListIncidents(year string, month string, unresolved bool) ([]models.Incident, error) {
+func (s *incidentService) ListIncidents(queryParameters models.ListIncidentQueryParameters) ([]models.Incident, error) {
 	var iComp []models.Incident
 	var start time.Time
+	var err error
 	end := time.Now()
-	if year == "" && month == "" {
-		return s.repo.List(start, end, unresolved)
+
+	if queryParameters.StartDate != "" {
+		start, err = time.Parse(time.RFC3339, queryParameters.StartDate)
+		if err != nil {
+			return iComp, err
+		}
 	}
 
-	m, err := s.ValidateMonth(month)
-	if err != nil && month != "" {
+	if queryParameters.EndDate != "" {
+		end, err = time.Parse(time.RFC3339, queryParameters.EndDate)
+		if err != nil {
+			return iComp, err
+		}
+	}
+
+	if err := s.ValidateDate(start, end); err != nil {
 		return iComp, err
 	}
 
-	y, err := s.ValidateYear(year)
-	if err != nil && year != "" {
-		return iComp, err
-	}
-
-	if y == -1 {
-		y = time.Now().Year()
-	}
-
-	if m == -1 {
-		start = time.Date(y, 1, 1, 0, 0, 0, 0, time.UTC)
-		end = time.Date(y+1, 1, 0, 23, 59, 59, 0, time.UTC)
-		return s.repo.List(start, end, unresolved)
-	}
-
-	start = time.Date(y, time.Month(m), 1, 0, 0, 0, 0, time.UTC)
-	end = time.Date(y, time.Month(m+1), 0, 23, 59, 59, 0, time.UTC)
-
-	return s.repo.List(start, end, unresolved)
+	return s.repo.List(start, end, queryParameters.Unresolved)
 }
 
-func (s *incidentService) ValidateMonth(month string) (int, error) {
-	m, err := strconv.Atoi(month)
-	if err != nil {
-		return -1, err
-	}
-	valid := m > 0 && m < 13
-	if !valid {
-		return -1, &errors.ErrInvalidMonth{Message: errors.ErrInvalidMonthMessage}
-	}
-	return m, nil
-}
+func (s *incidentService) ValidateDate(startDate, endDate time.Time) error {
 
-func (s *incidentService) ValidateYear(year string) (int, error) {
-	y, err := strconv.Atoi(year)
+	now, err := time.Parse(time.RFC3339, time.Now().Add(1 * time.Second).Format(time.RFC3339))
 	if err != nil {
-		return -1, err
+		return err
 	}
-	valid := y > 0 && y <= time.Now().Year()
-	if !valid {
-		return -1, &errors.ErrInvalidYear{Message: errors.ErrInvalidYearMessage}
+
+	if startDate.After(endDate) || startDate.After(now)  || endDate.After(now) {
+		return &errors.ErrInvalidDate{Message: errors.ErrInvalidDateMessage}
 	}
-	return y, nil
+
+	return nil
 }

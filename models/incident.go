@@ -14,6 +14,12 @@ type Incident struct {
 	ComponentRef string        `json:"component_ref" bson:"component_ref" binding:"required"`
 }
 
+type ListIncidentQueryParameters struct {
+	StartDate  string
+	EndDate    string
+	Unresolved bool
+}
+
 const (
 	// IncidentStatusOK means "This status is fully operational."
 	IncidentStatusOK = 1

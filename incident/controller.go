@@ -1,12 +1,11 @@
 package incident
 
 import (
-	"net/http"
-	"strconv"
-
 	"github.com/gin-gonic/gin"
 	"github.com/involvestecnologia/statuspage/errors"
 	"github.com/involvestecnologia/statuspage/models"
+	"net/http"
+	"strconv"
 )
 
 //Controller contains all the available handlers
@@ -61,29 +60,30 @@ func (ctrl *Controller) Find(c *gin.Context) {
 	c.JSON(http.StatusOK, incidents)
 }
 
-//List it's the handler function for Component listing endpoints
+//List it's the handler function for Incident listing endpoints
 func (ctrl *Controller) List(c *gin.Context) {
-	mQ := c.Query("month")
-	yQ := c.Query("year")
-	rQ, err := strconv.ParseBool(c.DefaultQuery("unresolved", "false"))
+	unresolvedQuery, err := strconv.ParseBool(c.DefaultQuery("unresolved", "false"))
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, &errors.ErrInvalidQuery{Message: errors.ErrInvalidQueryMessage})
 		return
 	}
-	incidents, err := ctrl.service.ListIncidents(yQ, mQ, rQ)
+
+	queryParameters := models.ListIncidentQueryParameters{
+		StartDate:  c.Query("startDate"),
+		EndDate:    c.Query("endDate"),
+		Unresolved: unresolvedQuery,
+	}
+
+	incidents, err := ctrl.service.ListIncidents(queryParameters)
 	if err != nil {
 		switch err.(type) {
-		case *errors.ErrInvalidYear:
-			c.AbortWithError(http.StatusBadRequest, err)
-			return
-		case *errors.ErrInvalidMonth:
+		case *errors.ErrInvalidDate:
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		default:
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
-
 	}
 	c.JSON(http.StatusOK, incidents)
 }
