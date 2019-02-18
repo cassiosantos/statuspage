@@ -1,6 +1,7 @@
 package prometheus
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/involvestecnologia/statuspage/component"
@@ -26,10 +27,11 @@ func (svc *prometheusService) ProcessIncomingWebhook(incoming models.PrometheusI
 		if svc.shouldFail(&alerts,err) {
 			return err
 		}
-		if alerts.Incident.Date.IsZero() {
-			alerts.Incident.Date = time.Now()
+		incident, err := svc.LabelToIncident(alerts)
+		if err != nil {
+			return err
 		}
-		if err := svc.incident.CreateIncidents(alerts.Incident); err != nil {
+		if err := svc.incident.CreateIncidents(incident); err != nil {
 			if svc.shouldFail(&alerts, err) {
 				return err
 			}
@@ -63,6 +65,23 @@ func (svc *prometheusService) addExistingComponentRef(alerts *models.PrometheusA
 	if err != nil {
 		return err
 	}
-	alerts.Incident.ComponentRef = c.Ref
+	alerts.PrometheusLabel.ComponentRef = c.Ref
 	return nil
+}
+
+func (svc *prometheusService) LabelToIncident(p models.PrometheusAlerts) (inc models.Incident, err error) {
+	if p.PrometheusLabel.Date.IsZero() {
+		p.PrometheusLabel.Date = time.Now()
+	}
+	if p.Status == "resolved" {
+		p.PrometheusLabel.Status = "1"
+	}
+	status, err := strconv.Atoi(p.PrometheusLabel.Status)
+	if err != nil {
+		return inc, err
+	}
+	inc.Status = status
+	inc.Date = p.PrometheusLabel.Date
+	inc.ComponentRef = p.PrometheusLabel.ComponentRef
+	return inc, nil
 }
