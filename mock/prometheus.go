@@ -37,7 +37,7 @@ func PrometheusModel() map[string]models.PrometheusIncomingWebhook {
 					PrometheusLabel: models.PrometheusLabel{
 						ComponentRef: "123123",
 						Description:  "status ok",
-						Status:       "1",
+						Status:       "3",
 					},
 					Component: models.Component{
 						Ref:  "123123",
