@@ -14,10 +14,10 @@ func PrometheusModel() map[string]models.PrometheusIncomingWebhook {
 			Alerts: []models.PrometheusAlerts{
 				{
 					Status: "RESOLVED",
-					Incident: models.Incident{
+					PrometheusLabel: models.PrometheusLabel{
 						ComponentRef: "123123",
 						Description:  "status ok",
-						Status:       1,
+						Status:       "1",
 					},
 					Component: models.Component{
 						Ref:     "123123",
@@ -30,14 +30,60 @@ func PrometheusModel() map[string]models.PrometheusIncomingWebhook {
 				},
 			},
 		},
+		"ModelFiring": {
+			Alerts: []models.PrometheusAlerts{
+				{
+					Status: "firing",
+					PrometheusLabel: models.PrometheusLabel{
+						ComponentRef: "123123",
+						Description:  "status ok",
+						Status:       "1",
+					},
+					Component: models.Component{
+						Ref:  "123123",
+						Name: "CompleteModel",
+						Labels: []string{
+							"Firing",
+						},
+						Address: "",
+					},
+					StartsAt:     time.Now(),
+					EndsAt:       time.Now(),
+					GeneratorURL: "ur.com",
+				},
+			},
+		},
+		"ModelResolved": {
+			Alerts: []models.PrometheusAlerts{
+				{
+					Status: "resolved",
+					PrometheusLabel: models.PrometheusLabel{
+						ComponentRef: "123123",
+						Description:  "status ok",
+						Status:       "1",
+					},
+					Component: models.Component{
+						Ref:  "123123",
+						Name: "CompleteModel",
+						Labels: []string{
+							"Resolved",
+						},
+						Address: "",
+					},
+					StartsAt:     time.Now(),
+					EndsAt:       time.Now(),
+					GeneratorURL: "ur.com",
+				},
+			},
+		},
 		"ModelWithoutName": {
 			Alerts: []models.PrometheusAlerts{
 				{
 					Status: "RESOLVED",
-					Incident: models.Incident{
+					PrometheusLabel: models.PrometheusLabel{
 						ComponentRef: ZeroTimeHex,
 						Description:  "status ok",
-						Status:       1,
+						Status:       "1",
 					},
 					Component: models.Component{
 						Ref:     ZeroTimeHex,
@@ -67,10 +113,10 @@ func PrometheusModel() map[string]models.PrometheusIncomingWebhook {
 			Alerts: []models.PrometheusAlerts{
 				{
 					Status: "RESOLVED",
-					Incident: models.Incident{
+					PrometheusLabel: models.PrometheusLabel{
 						ComponentRef: ZeroTimeHex,
 						Description:  "status ok",
-						Status:       1,
+						Status:       "1",
 					},
 					StartsAt:     time.Now(),
 					EndsAt:       time.Now(),
@@ -85,6 +131,24 @@ func PrometheusModel() map[string]models.PrometheusIncomingWebhook {
 					Component: models.Component{
 						Ref:     "ZeroTimeHex",
 						Name:    "first",
+						Address: "",
+					},
+					StartsAt:     time.Now(),
+					EndsAt:       time.Now(),
+					GeneratorURL: "ur.com",
+				},
+			},
+		},
+		"ModelWithIncidentWithoutComponentRef": {
+			Alerts: []models.PrometheusAlerts{
+				{
+					Status: "firing",
+					PrometheusLabel: models.PrometheusLabel{
+						Description: "status nonexistent",
+						Status:      "-1",
+					},
+					Component: models.Component{
+						Ref:     ZeroTimeHex,
 						Address: "",
 					},
 					StartsAt:     time.Now(),
@@ -112,10 +176,10 @@ func PrometheusModel() map[string]models.PrometheusIncomingWebhook {
 			Alerts: []models.PrometheusAlerts{
 				{
 					Status: "RESOLVED",
-					Incident: models.Incident{
+					PrometheusLabel: models.PrometheusLabel{
 						ComponentRef: "123123",
 						Description:  "status ok",
-						Status:       3,
+						Status:       "1",
 					},
 					Component: models.Component{
 						Ref:     "123123",

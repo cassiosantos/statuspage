@@ -45,9 +45,7 @@ func (svc *prometheusService) shouldFail(alerts *models.PrometheusAlerts, err er
 	case *errors.ErrComponentNameIsEmpty:
 		return true
 	case *errors.ErrComponentNameAlreadyExists:
-		if err = svc.addExistingComponentRef(alerts); err != nil {
-			return true
-		}
+		svc.addExistingComponentRef(alerts)
 		return false
 	case *errors.ErrComponentRefAlreadyExists:
 		return false
@@ -61,10 +59,7 @@ func (svc *prometheusService) shouldFail(alerts *models.PrometheusAlerts, err er
 }
 
 func (svc *prometheusService) addExistingComponentRef(alerts *models.PrometheusAlerts) error {
-	c, err := svc.component.FindComponent(map[string]interface{}{"name": alerts.Component.Name})
-	if err != nil {
-		return err
-	}
+	c, _ := svc.component.FindComponent(map[string]interface{}{"name": alerts.Component.Name})
 	alerts.PrometheusLabel.ComponentRef = c.Ref
 	return nil
 }
