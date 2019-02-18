@@ -24,7 +24,7 @@ func (svc *prometheusService) ProcessIncomingWebhook(incoming models.PrometheusI
 	for _, alerts := range incoming.Alerts {
 		ref, err := svc.component.CreateComponent(alerts.Component)
 		alerts.Component.Ref = ref
-		if svc.shouldFail(&alerts,err) {
+		if svc.shouldFail(&alerts, err) {
 			return err
 		}
 		incident, err := svc.LabelToIncident(alerts)
@@ -60,7 +60,7 @@ func (svc *prometheusService) shouldFail(alerts *models.PrometheusAlerts, err er
 	}
 }
 
-func (svc *prometheusService) addExistingComponentRef(alerts *models.PrometheusAlerts) (error) {
+func (svc *prometheusService) addExistingComponentRef(alerts *models.PrometheusAlerts) error {
 	c, err := svc.component.FindComponent(map[string]interface{}{"name": alerts.Component.Name})
 	if err != nil {
 		return err
@@ -80,8 +80,11 @@ func (svc *prometheusService) LabelToIncident(p models.PrometheusAlerts) (inc mo
 	if err != nil {
 		return inc, err
 	}
+
 	inc.Status = status
 	inc.Date = p.PrometheusLabel.Date
 	inc.ComponentRef = p.PrometheusLabel.ComponentRef
+	inc.Description = p.PrometheusLabel.Description
+
 	return inc, nil
 }

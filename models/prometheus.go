@@ -19,6 +19,7 @@ type PrometheusAlerts struct {
 
 type PrometheusLabel struct {
 	Status       string    `json:"status" binding:"required"`
+	Description	 string		`json:"description"`
 	Date         time.Time `json:"occurrence_date" binding:"required"`
 	ComponentRef string    `json:"component_ref" bson:"component_ref" binding:"required"`
 }
