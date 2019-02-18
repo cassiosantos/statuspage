@@ -42,9 +42,6 @@ const (
 
 	//ErrIncidentStatusIgnoredMessage is the ignored Incident creation default message
 	ErrIncidentStatusIgnoredMessage = "Status didn't close last incident or escaled it's status"
-
-	//ErrIncidentStatusIgnoredMessage is the ignored Incident creation default message
-	ErrPrometheusStatusErrMessage = "Status not match respective status of incoming webhook"
 )
 
 //ErrAlreadyExists is a error type throwed when the resource already exists
@@ -116,10 +113,6 @@ type ErrMongoFailuere struct {
 type ErrIncidentStatusIgnored struct {
 	Message string
 }
-//ErrPrometheusStatusErr is a error type throwed when a Incident status does not match respective status on prometheus incoming
-type ErrPrometheusStatusErr struct {
-	Message string
-}
 
 func (e *ErrAlreadyExists) Error() string {
 	return e.Message
@@ -162,9 +155,5 @@ func (e *ErrMongoFailuere) Error() string {
 }
 
 func (e *ErrIncidentStatusIgnored) Error() string {
-	return e.Message
-}
-
-func (e *ErrPrometheusStatusErr) Error() string {
 	return e.Message
 }
