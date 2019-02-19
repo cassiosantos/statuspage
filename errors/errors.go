@@ -153,6 +153,7 @@ func (e *ErrInvalidIncidentJSONDate) Error() string {
 func (e *ErrMongoFailuere) Error() string {
 	return e.Message
 }
+
 func (e *ErrIncidentStatusIgnored) Error() string {
 	return e.Message
 }

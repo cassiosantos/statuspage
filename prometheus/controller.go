@@ -1,10 +1,10 @@
 package prometheus
 
 import (
+	"github.com/involvestecnologia/statuspage/models"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/involvestecnologia/statuspage/models"
 )
 
 //Controller contains all the available handlers

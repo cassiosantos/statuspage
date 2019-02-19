@@ -1,6 +1,7 @@
 package prometheus
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/involvestecnologia/statuspage/component"
@@ -23,13 +24,14 @@ func (svc *prometheusService) ProcessIncomingWebhook(incoming models.PrometheusI
 	for _, alerts := range incoming.Alerts {
 		ref, err := svc.component.CreateComponent(alerts.Component)
 		alerts.Component.Ref = ref
-		if svc.shouldFail(&alerts,err) {
+		if svc.shouldFail(&alerts, err) {
 			return err
 		}
-		if alerts.Incident.Date.IsZero() {
-			alerts.Incident.Date = time.Now()
+		incident, err := svc.LabelToIncident(alerts)
+		if err != nil {
+			return err
 		}
-		if err := svc.incident.CreateIncidents(alerts.Incident); err != nil {
+		if err := svc.incident.CreateIncidents(incident); err != nil {
 			if svc.shouldFail(&alerts, err) {
 				return err
 			}
@@ -43,9 +45,7 @@ func (svc *prometheusService) shouldFail(alerts *models.PrometheusAlerts, err er
 	case *errors.ErrComponentNameIsEmpty:
 		return true
 	case *errors.ErrComponentNameAlreadyExists:
-		if err = svc.addExistingComponentRef(alerts); err != nil {
-			return true
-		}
+		svc.addExistingComponentRef(alerts)
 		return false
 	case *errors.ErrComponentRefAlreadyExists:
 		return false
@@ -58,11 +58,28 @@ func (svc *prometheusService) shouldFail(alerts *models.PrometheusAlerts, err er
 	}
 }
 
-func (svc *prometheusService) addExistingComponentRef(alerts *models.PrometheusAlerts) (error) {
-	c, err := svc.component.FindComponent(map[string]interface{}{"name": alerts.Component.Name})
-	if err != nil {
-		return err
-	}
-	alerts.Incident.ComponentRef = c.Ref
+func (svc *prometheusService) addExistingComponentRef(alerts *models.PrometheusAlerts) error {
+	c, _ := svc.component.FindComponent(map[string]interface{}{"name": alerts.Component.Name})
+	alerts.PrometheusLabel.ComponentRef = c.Ref
 	return nil
+}
+
+func (svc *prometheusService) LabelToIncident(p models.PrometheusAlerts) (inc models.Incident, err error) {
+	if p.PrometheusLabel.Date.IsZero() {
+		p.PrometheusLabel.Date = time.Now()
+	}
+	if p.Status == "resolved" {
+		p.PrometheusLabel.Status = "1"
+	}
+	status, err := strconv.Atoi(p.PrometheusLabel.Status)
+	if err != nil {
+		return inc, err
+	}
+
+	inc.Status = status
+	inc.Date = p.PrometheusLabel.Date
+	inc.ComponentRef = p.PrometheusLabel.ComponentRef
+	inc.Description = p.PrometheusLabel.Description
+
+	return inc, nil
 }
