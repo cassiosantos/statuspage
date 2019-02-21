@@ -20,14 +20,18 @@ func NewPrometheusService(incident incident.Service, component component.Service
 	return &prometheusService{incident: incident, component: component}
 }
 
-func (svc *prometheusService) ProcessIncomingWebhook(incoming models.PrometheusIncomingWebhook) error {
+func (svc *prometheusService) ProcessIncomingWebhook(incoming models.PrometheusIncomingWebhook) (err error) {
+	var ref string
 	for _, alert := range incoming.Alerts {
-		if unknownComponentLabel, y := svc.hasComponentLabel(alert); !y {
-			alert = unknownComponentLabel
-		}
-		ref, err := svc.component.CreateComponent(alert.Component)
-		alert.Component.Ref = ref
-		if svc.shouldFail(&alert, err) {
+		alert.Component, err = svc.component.FindComponent(map[string]interface{}{"name": alert.Component.Name})
+		if _, ok := err.(*errors.ErrNotFound); ok {
+			alert.Component.Labels = []string{"Unknown"}
+			ref, err = svc.component.CreateComponent(alert.Component)
+			if svc.shouldFail(err) {
+				return err
+			}
+			alert.Component.Ref = ref
+		} else {
 			return err
 		}
 		incident, err := svc.LabelToIncident(alert)
@@ -35,7 +39,7 @@ func (svc *prometheusService) ProcessIncomingWebhook(incoming models.PrometheusI
 			return err
 		}
 		if err := svc.incident.CreateIncidents(incident); err != nil {
-			if svc.shouldFail(&alert, err) {
+			if svc.shouldFail(err) {
 				return err
 			}
 		}
@@ -43,12 +47,11 @@ func (svc *prometheusService) ProcessIncomingWebhook(incoming models.PrometheusI
 	return nil
 }
 
-func (svc *prometheusService) shouldFail(alerts *models.PrometheusAlerts, err error) bool {
+func (svc *prometheusService) shouldFail(err error) bool {
 	switch err.(type) {
 	case *errors.ErrComponentNameIsEmpty:
 		return true
 	case *errors.ErrComponentNameAlreadyExists:
-		svc.addExistingComponentRef(alerts)
 		return false
 	case *errors.ErrComponentRefAlreadyExists:
 		return false
@@ -59,12 +62,6 @@ func (svc *prometheusService) shouldFail(alerts *models.PrometheusAlerts, err er
 	default:
 		return true
 	}
-}
-
-func (svc *prometheusService) addExistingComponentRef(alerts *models.PrometheusAlerts) error {
-	c, _ := svc.component.FindComponent(map[string]interface{}{"name": alerts.Component.Name})
-	alerts.PrometheusLabel.ComponentRef = c.Ref
-	return nil
 }
 
 func (svc *prometheusService) LabelToIncident(p models.PrometheusAlerts) (inc models.Incident, err error) {
@@ -85,12 +82,4 @@ func (svc *prometheusService) LabelToIncident(p models.PrometheusAlerts) (inc mo
 	inc.Description = p.PrometheusLabel.Description
 
 	return inc, nil
-}
-
-func (svc *prometheusService) hasComponentLabel(alert models.PrometheusAlerts) (models.PrometheusAlerts, bool) {
-	if len(alert.Component.Labels) == 0 {
-		alert.Component.Labels = []string{"Unknown"}
-		return alert, false
-	}
-	return alert, true
 }
