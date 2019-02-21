@@ -72,7 +72,7 @@ func (svc *prometheusService) LabelToIncident(p models.PrometheusAlerts) (inc mo
 
 	inc.Status = status
 	inc.Date = p.PrometheusLabel.Date
-	inc.ComponentRef = p.PrometheusLabel.ComponentRef
+	inc.ComponentRef = p.Component.Ref
 	inc.Description = p.PrometheusLabel.Description
 
 	return inc, nil
