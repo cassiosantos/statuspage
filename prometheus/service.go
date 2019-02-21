@@ -21,18 +21,21 @@ func NewPrometheusService(incident incident.Service, component component.Service
 }
 
 func (svc *prometheusService) ProcessIncomingWebhook(incoming models.PrometheusIncomingWebhook) error {
-	for _, alerts := range incoming.Alerts {
-		ref, err := svc.component.CreateComponent(alerts.Component)
-		alerts.Component.Ref = ref
-		if svc.shouldFail(&alerts, err) {
+	for _, alert := range incoming.Alerts {
+		if unknownComponentLabel, y := svc.hasComponentLabel(alert); !y {
+			alert = unknownComponentLabel
+		}
+		ref, err := svc.component.CreateComponent(alert.Component)
+		alert.Component.Ref = ref
+		if svc.shouldFail(&alert, err) {
 			return err
 		}
-		incident, err := svc.LabelToIncident(alerts)
+		incident, err := svc.LabelToIncident(alert)
 		if err != nil {
 			return err
 		}
 		if err := svc.incident.CreateIncidents(incident); err != nil {
-			if svc.shouldFail(&alerts, err) {
+			if svc.shouldFail(&alert, err) {
 				return err
 			}
 		}
@@ -82,4 +85,12 @@ func (svc *prometheusService) LabelToIncident(p models.PrometheusAlerts) (inc mo
 	inc.Description = p.PrometheusLabel.Description
 
 	return inc, nil
+}
+
+func (svc *prometheusService) hasComponentLabel(alert models.PrometheusAlerts) (models.PrometheusAlerts, bool) {
+	if len(alert.Component.Labels) == 0 {
+		alert.Component.Labels = []string{"Unknown"}
+		return alert, false
+	}
+	return alert, true
 }
