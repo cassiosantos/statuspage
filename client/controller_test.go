@@ -23,7 +23,7 @@ const (
 )
 
 var router = gin.Default()
-var compSvc = component.NewService(mock.NewMockComponentDAO())
+var compSvc = component.NewService(mock.NewMockComponentDAO(), mock.NewComponentLogRepositoryMock())
 
 func init() {
 	clientService := client.NewService(mock.NewMockClientDAO(), compSvc)
