@@ -47,11 +47,16 @@ func (r *mongoRepository) FindOne(queryParam map[string]interface{}) (incident m
 func (r *mongoRepository) Update(incident models.Incident) (err error) {
 	defer mongoFailure(&err)
 	var i models.Incident
+	field := bson.M{
+		"component_ref": incident.ComponentRef,
+		"description":   incident.Description,
+		"resolved":      false,
+	}
 	change := mgo.Change{
 		Update:    bson.M{"$set": incident},
 		ReturnNew: false,
 	}
-	_, err = r.db.DB(databaseName).C("Incidents").Find(bson.M{"component_ref": incident.ComponentRef}).Sort("-date").Apply(change, &i)
+	_, err = r.db.DB(databaseName).C("Incidents").Find(field).Sort("-date").Apply(change, &i)
 	if err != nil {
 		return &errors.ErrNotFound{Message: errors.ErrNotFoundMessage}
 	}
