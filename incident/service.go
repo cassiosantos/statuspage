@@ -44,8 +44,23 @@ func (s *incidentService) CreateIncidents(incident models.Incident) error {
 	}
 
 	if lastIncident.Status == models.IncidentStatusOK {
-		//Last status was OK, just create the new incident.
-		return s.repo.Insert(incident)
+		unresolvedIncidents, err := s.GetUnresolvedIncidents(incident.ComponentRef, incident.Description)
+		if err != nil {
+			switch err.(type) {
+			case *errors.ErrNotFound:
+				//No unresolved incidents found, just create the new incident
+				return s.repo.Insert(incident)
+			default:
+				return err
+			}
+		}
+		for _, inc := range unresolvedIncidents {
+			inc.Resolved = true
+			inc.Duration = time.Since(lastIncident.Date)
+			s.UpdateIncident(inc)
+			s.repo.Insert(incident)
+		}
+		return err
 	}
 
 	if incident.Status == models.IncidentStatusOK {
@@ -78,6 +93,10 @@ func (s *incidentService) FindIncidents(query map[string]interface{}) ([]models.
 
 func (s *incidentService) GetLastIncident(componentRef string) (models.Incident, error) {
 	return s.repo.FindOne(map[string]interface{}{"component_ref": componentRef})
+}
+
+func (s *incidentService) GetUnresolvedIncidents(componentRef, description string) ([]models.Incident, error) {
+	return s.repo.Find(map[string]interface{}{"component_ref": componentRef, "description": description, "resolved": false})
 }
 
 func (s *incidentService) ListIncidents(queryParameters models.ListIncidentQueryParameters) ([]models.Incident, error) {
