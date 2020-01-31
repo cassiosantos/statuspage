@@ -41,5 +41,5 @@ func main() {
 	client.Router(clientService, v1)
 	prometheus.Router(incidentService, componentService, v1)
 
-	router.Run(":8080")
+	router.Run(":8080") // #nosec
 }
