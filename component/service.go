@@ -2,31 +2,37 @@ package component
 
 import (
 	"github.com/involvestecnologia/statuspage/errors"
+	"github.com/involvestecnologia/statuspage/logs"
 	"github.com/involvestecnologia/statuspage/models"
 )
 
 type componentService struct {
 	repo Repository
+	log  logs.Log
 }
 
 //NewService creates implementation of the Service interface
-func NewService(r Repository) Service {
-	return &componentService{repo: r}
+func NewService(r Repository, l logs.Log) Service {
+	return &componentService{repo: r, log: l}
 }
 
 func (s *componentService) CreateComponent(component models.Component) (string, error) {
 	if valid, err := s.isValidComponent(component); !valid {
+		s.log.Error(models.LogFields{"component_name": component.Name, "error_message": err.Error()}, "Component creation failed, it seems this component is not valid")
 		return component.Ref, err
 	}
 
 	if inUse, err := s.isComponentNameInUse(component); inUse {
+		s.log.Error(models.LogFields{"component_name": component.Name}, err.Error())
 		return component.Ref, err
 	}
 
 	if inUse, err := s.isComponentRefInUse(component); inUse {
+		s.log.Error(models.LogFields{"component_ref": component.Ref}, err.Error())
 		return component.Ref, err
 	}
 
+	s.log.Info(nil, "Validations passed! creating new component")
 	return s.repo.Insert(component)
 }
 
